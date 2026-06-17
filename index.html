@@ -3105,19 +3105,43 @@ const demoScriptUrl = 'https://script.google.com/macros/s/AKfycbz_lSLbpqFFNyDlxh
 let demoHistory = JSON.parse(localStorage.getItem('demo_history') || '[]');
 
 // ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function demoInit() {
-  // Admin keyboard shortcut: Shift+A (only when demo overlay is hidden)
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ── Button wiring (no onclick in HTML) ──────────────────────
+  function on(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+
+  on('demo-start-btn',  demoStart);
+  on('demo-next-btn',   demoNext);
+  on('demo-enter-btn',  demoEnterPortal);
+  on('demo-restart-btn',demoRestart);
+  on('admin-export-btn',adminExportCSV);
+  on('admin-close-btn', function(){ document.getElementById('demo-admin').classList.remove('open'); });
+
+  // Delegated click for dynamically-generated option buttons
+  var optionsEl = document.getElementById('demo-q-options');
+  if (optionsEl) {
+    optionsEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-idx]');
+      if (btn) demoSelect(parseInt(btn.getAttribute('data-idx'), 10));
+    });
+  }
+
+  // Enter key navigation
+  var nom = document.getElementById('d-nombre');
+  var ape = document.getElementById('d-apellido');
+  if (nom) nom.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); if(ape) ape.focus(); } });
+  if (ape) ape.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); demoStart(); } });
+
+  // Admin keyboard shortcut: Shift+A after portal is open
   document.addEventListener('keydown', function(e) {
     if (e.shiftKey && e.key === 'A' && document.getElementById('demo-overlay').classList.contains('hidden')) {
       demoOpenAdmin();
     }
   });
 
-  // Enter key navigation between fields
-  const nom = document.getElementById('d-nombre');
-  const ape = document.getElementById('d-apellido');
-  if (nom) nom.addEventListener('keydown', function(e){ if(e.key==='Enter') ape && ape.focus(); });
-  if (ape) ape.addEventListener('keydown', function(e){ if(e.key==='Enter') demoStart(); });
 });
 
 // ── SETUP ─────────────────────────────────────────────────────
@@ -3179,17 +3203,18 @@ function demoRenderQuestion() {
   const letters = ['A','B','C','D'];
   const opts = document.getElementById('demo-q-options');
   opts.innerHTML = q.opts.map((opt, i) =>
-    `<button class="demo-option" data-idx="${i}" onclick="demoSelect(${i})">
+    `<button class="demo-option" data-idx="${i}" type="button">
       <span class="demo-opt-letter">${letters[i]}</span>
       <span class="demo-opt-text">${opt}</span>
     </button>`
   ).join('');
 
   // Reset feedback + next button
-  const fb = document.getElementById('demo-feedback');
+  var fb = document.getElementById('demo-feedback');
   fb.className = 'demo-feedback';
   fb.textContent = '';
-  document.getElementById('demo-next-btn').disabled = true;
+  var nextBtn = document.getElementById('demo-next-btn');
+  if (nextBtn) nextBtn.disabled = true;
   demoSelected = null;
 }
 
@@ -3445,7 +3470,7 @@ function adminExportCSV() {
         </div>
       </div>
       <div class="demo-btn-row">
-        <button class="demo-btn gold" id="demo-start-btn" onclick="demoStart()">
+        <button class="demo-btn gold" id="demo-start-btn" type="button">
           Empezar el test
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -3470,7 +3495,7 @@ function adminExportCSV() {
       <div class="demo-options" id="demo-q-options"></div>
       <div class="demo-feedback" id="demo-feedback"></div>
       <div class="demo-btn-row">
-        <button class="demo-btn" id="demo-next-btn" onclick="demoNext()" disabled>
+        <button class="demo-btn" id="demo-next-btn" type="button">
           Siguiente
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -3494,11 +3519,11 @@ function adminExportCSV() {
       </div>
       <div class="demo-unlocks" id="res-unlocks"></div>
       <div class="demo-btn-row">
-        <button class="demo-btn gold" onclick="demoEnterPortal()">
+        <button class="demo-btn gold" id="demo-enter-btn" type="button">
           Entrar al portal
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button class="demo-btn" style="background:transparent;color:#3E6FA8;border:1.5px solid rgba(62,111,168,.3)" onclick="demoRestart()">
+        <button class="demo-btn" id="demo-restart-btn" type="button" style="background:transparent;color:#3E6FA8;border:1.5px solid rgba(62,111,168,.3)">
           Repetir test
         </button>
       </div>
@@ -3513,8 +3538,8 @@ function adminExportCSV() {
     <div class="admin-hdr">
       <svg viewBox="0 0 48 48" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="translate(24.4,22.3) scale(.85)"><path d="M-3.2-15 L3.2-14 L6.4 4.6 L.8 4.6 L-.8 18.4 L-7.2-2.3 L-1.6-2.3Z" fill="#FBB03B"/></g></svg>
       <h2>Historial de respuestas</h2>
-      <button class="demo-btn" style="padding:8px 16px;font-size:12px" onclick="adminExportCSV()">Exportar CSV</button>
-      <button class="demo-btn" style="padding:8px 16px;font-size:12px;background:transparent;color:#3E6FA8;border:1.5px solid rgba(62,111,168,.3);margin-left:4px" onclick="document.getElementById('demo-admin').classList.remove('open')">Cerrar</button>
+      <button class="demo-btn" id="admin-export-btn" type="button" style="padding:8px 16px;font-size:12px">Exportar CSV</button>
+      <button class="demo-btn" style="padding:8px 16px;font-size:12px;background:transparent;color:#3E6FA8;border:1.5px solid rgba(62,111,168,.3);margin-left:4px" id="admin-close-btn" type="button">Cerrar</button>
     </div>
     <div class="admin-body" id="admin-body">
       <div class="admin-empty">No hay respuestas registradas todavía.</div>
