@@ -3105,7 +3105,7 @@ const demoScriptUrl = 'https://script.google.com/macros/s/AKfycbz_lSLbpqFFNyDlxh
 let demoHistory = JSON.parse(localStorage.getItem('demo_history') || '[]');
 
 // ── INIT ──────────────────────────────────────────────────────
-(function demoInit() {
+document.addEventListener('DOMContentLoaded', function demoInit() {
   // Admin keyboard shortcut: Shift+A (only when demo overlay is hidden)
   document.addEventListener('keydown', function(e) {
     if (e.shiftKey && e.key === 'A' && document.getElementById('demo-overlay').classList.contains('hidden')) {
@@ -3117,6 +3117,7 @@ let demoHistory = JSON.parse(localStorage.getItem('demo_history') || '[]');
   const nom = document.getElementById('d-nombre');
   const ape = document.getElementById('d-apellido');
   const btn = document.getElementById('demo-start-btn');
+  if (!nom || !ape || !btn) return;
   function checkFields() {
     btn.disabled = !(nom.value.trim() && ape.value.trim());
   }
@@ -3125,7 +3126,7 @@ let demoHistory = JSON.parse(localStorage.getItem('demo_history') || '[]');
   nom.addEventListener('keydown', function(e){ if(e.key==='Enter') ape.focus(); });
   ape.addEventListener('keydown', function(e){ if(e.key==='Enter' && nom.value.trim() && ape.value.trim()) demoStart(); });
   checkFields();
-})();
+});
 
 // ── SETUP ─────────────────────────────────────────────────────
 // Setup functions removed — URL hardcoded
