@@ -3113,19 +3113,11 @@ document.addEventListener('DOMContentLoaded', function demoInit() {
     }
   });
 
-  // Start button: enable only when both name fields filled
+  // Enter key navigation between fields
   const nom = document.getElementById('d-nombre');
   const ape = document.getElementById('d-apellido');
-  const btn = document.getElementById('demo-start-btn');
-  if (!nom || !ape || !btn) return;
-  function checkFields() {
-    btn.disabled = !(nom.value.trim() && ape.value.trim());
-  }
-  nom.addEventListener('input', checkFields);
-  ape.addEventListener('input', checkFields);
-  nom.addEventListener('keydown', function(e){ if(e.key==='Enter') ape.focus(); });
-  ape.addEventListener('keydown', function(e){ if(e.key==='Enter' && nom.value.trim() && ape.value.trim()) demoStart(); });
-  checkFields();
+  if (nom) nom.addEventListener('keydown', function(e){ if(e.key==='Enter') ape && ape.focus(); });
+  if (ape) ape.addEventListener('keydown', function(e){ if(e.key==='Enter') demoStart(); });
 });
 
 // ── SETUP ─────────────────────────────────────────────────────
@@ -3136,7 +3128,18 @@ document.addEventListener('DOMContentLoaded', function demoInit() {
 function demoStart() {
   const nom = document.getElementById('d-nombre').value.trim();
   const ape = document.getElementById('d-apellido').value.trim();
-  if (!nom || !ape) return;
+  if (!nom) {
+    const el = document.getElementById('d-nombre');
+    el.focus(); el.style.borderColor='#dc2626';
+    setTimeout(()=>el.style.borderColor='',1400);
+    return;
+  }
+  if (!ape) {
+    const el = document.getElementById('d-apellido');
+    el.focus(); el.style.borderColor='#dc2626';
+    setTimeout(()=>el.style.borderColor='',1400);
+    return;
+  }
   demoUser = { nombre: nom, apellido: ape };
   demoCurrent = 0;
   demoAnswers = [];
@@ -3348,7 +3351,6 @@ function demoRestart() {
   demoSelected = null;
   document.getElementById('d-nombre').value = '';
   document.getElementById('d-apellido').value = '';
-  document.getElementById('demo-start-btn').disabled = true;
   document.getElementById('demo-overlay').classList.remove('hidden');
   demoShowStep('demo-step-welcome');
 }
