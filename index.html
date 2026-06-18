@@ -1759,7 +1759,7 @@ var QS = [
 
 var LVL_NAME = ['','Explorador','Constructor','Inventor','Maker','Innovador','Creador','Héroe Digital','Maestro','Visionario','Leyenda'];
 var LVL_PAL  = ['','amarillo','amarillo','caramelo','caramelo','bosque','bosque','oceano','oceano','nieve','nieve'];
-var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz_lSLbpqFFNyDlxhYvKEWcOdipoDUi67aT3zE6aSLeGAPjBQAcST3suc0-fInIDAGt6Q/exec';
+// Google Forms endpoint — configured below in sendToSheets()
 
 // ─── STATE ──────────────────────────────────────────────────────
 var S = { nombre:'', apellido:'', cur:0, ans:[], sel:null };
@@ -1903,16 +1903,20 @@ function showResult() {
   try { localStorage.setItem('igndemo', JSON.stringify(history.slice(0,200))); } catch(e){}
 
   // Send to Sheets
-  // Send to Google Sheets via GET + query params (zero CORS, works everywhere)
+  // Send to Google Forms (zero CORS, always works)
   try {
-    var params = 'ts='    + encodeURIComponent(entry.timestamp)
-               + '&nom='  + encodeURIComponent(entry.nombre)
-               + '&lvl='  + encodeURIComponent(entry.nivel)
-               + '&ok='   + encodeURIComponent(entry.correctas)
-               + '&tot='  + encodeURIComponent(entry.total)
-               + '&ans='  + encodeURIComponent(entry.respuestas);
-    var img = new Image();
-    img.src = SHEETS_URL + '?' + params;
+    var fd = new FormData();
+    fd.append('entry.2093925593', entry.timestamp);
+    fd.append('entry.289049560',  entry.nombre);
+    fd.append('entry.1011156770', String(entry.nivel));
+    fd.append('entry.422419592',  String(entry.correctas));
+    fd.append('entry.1016999884', String(entry.total));
+    fd.append('entry.1316911456', entry.respuestas);
+    fetch('https://docs.google.com/forms/d/e/1FAIpQLSezXzVtlqBdrIoha8qoFBbRM8LpqLGirTXUD-w5RBlJAvQOiQ/formResponse', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: fd
+    });
   } catch(e) {}
 }
 
