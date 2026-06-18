@@ -1872,9 +1872,10 @@ function showResult() {
   var nivel = Math.min(10, Math.round(ok / total * 9) + 1);
   var fullName = S.nombre + ' ' + S.apellido;
 
+  const t18n = I18N[_currentLang] || I18N.ESP;
   qs('res-lvl').textContent = nivel;
   qs('res-name').textContent = fullName;
-  qs('res-tag').innerHTML = 'Has alcanzado el nivel <strong>' + LVL_NAME[nivel] + '</strong>.';
+  qs('res-tag').innerHTML = 'Has alcanzado el nivel <strong>' + t18n.levelNames[nivel] + '</strong>.';
   qs('res-ok').textContent = ok;
   qs('res-tot').textContent = total;
   qs('res-pct').textContent = Math.round(ok/total*100) + '%';
@@ -1903,20 +1904,17 @@ function showResult() {
   try { localStorage.setItem('igndemo', JSON.stringify(demoLog.slice(0,200))); } catch(e){}
 
   // Send to Sheets
-  // Send to Google Forms (zero CORS, always works)
+  // Send to Google Forms via URL params (works with public forms, zero CORS)
   try {
-    var fd = new FormData();
-    fd.append('entry.2093925593', entry.timestamp);
-    fd.append('entry.289049560',  entry.nombre);
-    fd.append('entry.1011156770', String(entry.nivel));
-    fd.append('entry.422419592',  String(entry.correctas));
-    fd.append('entry.1016999884', String(entry.total));
-    fd.append('entry.1316911456', entry.respuestas);
-    fetch('https://docs.google.com/forms/d/e/1FAIpQLSezXzVtlqBdrIoha8qoFBbRM8LpqLGirTXUD-w5RBlJAvQOiQ/formResponse', {
-      method: 'POST',
-      mode: 'no-cors',
-      body: fd
-    });
+    var url = 'https://docs.google.com/forms/d/e/1FAIpQLSezXzVtlqBdrIoha8qoFBbRM8LpqLGirTXUD-w5RBlJAvQOiQ/formResponse'
+      + '?entry.2093925593=' + encodeURIComponent(entry.timestamp)
+      + '&entry.289049560='  + encodeURIComponent(entry.nombre)
+      + '&entry.1011156770=' + encodeURIComponent(entry.nivel)
+      + '&entry.422419592='  + encodeURIComponent(entry.correctas)
+      + '&entry.1016999884=' + encodeURIComponent(entry.total)
+      + '&entry.1316911456=' + encodeURIComponent(entry.respuestas)
+      + '&submit=Submit';
+    fetch(url, { method:'GET', mode:'no-cors' });
   } catch(e) {}
 }
 
@@ -1954,8 +1952,8 @@ function enterPortal() {
     // Level
     var ld = document.getElementById('level-display');
     if (ld) ld.textContent = nivel;
-    var ln = document.querySelector('.level-name');
-    if (ln) ln.textContent = LVL_NAME[nivel];
+    var ln = document.getElementById('level-name-el');
+    if (ln) ln.textContent = (I18N[_currentLang] || I18N.ESP).levelNames[nivel] || LVL_NAME[nivel];
 
     // Palette + level for portal JS
     if (typeof setPalette === 'function') setPalette(LVL_PAL[nivel]);
@@ -2095,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="palette-modal" id="palette-modal">
   <div class="palette-modal-backdrop" onclick="closePalette()"></div>
   <div class="palette-modal-box">
-    <div class="palette-modal-title">🎨 Elige tu mundo</div>
+    <div class="palette-modal-title"><span data-i18n="eligeTuMundo">🎨 Elige tu mundo</span></div>
     <button class="palette-option" data-pal="amarillo" onclick="setPalette('amarillo')">
       <span class="palette-swatch"><i style="background:#FEF3C6"></i><i style="background:#7CB8F5"></i><i style="background:#FBB03B"></i></span>
       <span class="palette-meta">Clásico<small>Colinas al sol</small></span>
@@ -2205,7 +2203,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <!-- Profile info: scrolls away below the sticky mascot -->
       <div class="hero-profile-area">
         <div class="profile-hero">
-          <div class="profile-name">Álvaro López</div>
+          <div class="profile-name" data-i18n-name>Álvaro López</div>
           <div class="profile-school">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M4 10 L12 5 L20 10 L20 20 L4 20Z" stroke="#3E6FA8" stroke-width="1.5" stroke-linejoin="miter"/><rect x="9" y="14" width="6" height="6" stroke="#7CB8F5" stroke-width="1.5"/></svg>
             CEIP San Pablo · Madrid
@@ -2215,7 +2213,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="group-chip">Robótica Avanzada</span>
           </div>
           <div class="level-block">
-            <span class="level-label">Nivel</span>
+            <span class="level-label" data-i18n="nivel">Nivel</span>
             <div class="level-num-row">
               <svg class="level-corner-l" width="20" height="28" viewBox="0 0 20 28" fill="none">
                 <path d="M18 2 L2 2 L2 26" stroke="#2596BE" stroke-width="2" stroke-linecap="square" fill="none"/>
@@ -2237,7 +2235,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <path d="M18 2 L2 2 L2 26" stroke="#7CB8F5" stroke-width="2" stroke-linecap="square" fill="none"/>
               </svg>
             </div>
-            <span class="level-name">Héroe Digital</span>
+            <span class="level-name" id="level-name-el" data-i18n-levelname>Héroe Digital</span>
           </div>
         </div>
 
@@ -2252,14 +2250,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
           </div>
           <div class="xp-legend">
-            <span class="xp-legend-left">Nivel 7</span>
-            <span>360 XP para Nivel 8</span>
+            <span class="xp-legend-left" data-i18n-xpleft>Nivel 7</span>
+            <span data-i18n-xpright>360 XP para Nivel 8</span>
           </div>
           <!-- Palette picker -->
           <div class="palette-picker-wrap">
             <button class="palette-picker-row" onclick="openPalette()">
               <span class="palette-dots"><span style="background:#FBB03B"></span><span style="background:#16a34a"></span><span style="background:#0284c7"></span></span>
-              <span id="palette-mode-label">Modo Clásico</span>
+              <span id="palette-mode-label" data-i18n="modoClasico">Modo Clásico</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
@@ -2275,7 +2273,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="section section-reveal" id="missions-section">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16 2 L20.8 18 L12.8 18 L11.2 33.6 L3.2 12.8 L11.2 12.8Z" fill="#FBB03B"/></svg>
-        Misión activa
+        <span data-i18n="misionActiva">Misión activa</span>
       </div>
       <div class="mission-grid single" id="mission-grid"></div>
     </div>
@@ -2289,17 +2287,17 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="section section-reveal">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect x="5" y="5" width="9" height="9" rx="2" stroke="#3E6FA8" stroke-width="1.5"/><rect x="18" y="5" width="9" height="9" rx="2" stroke="#7CB8F5" stroke-width="1.5"/><rect x="5" y="18" width="9" height="9" rx="2" stroke="#7CB8F5" stroke-width="1.5"/><rect x="18" y="18" width="9" height="9" rx="2" stroke="#2596BE" stroke-width="1.5"/></svg>
-        Archivo de misiones
+        <span data-i18n="archivoMisiones">Archivo de misiones</span>
       </div>
       <div class="archive-grid" id="archive-grid"></div>
-      <button class="more-btn" onclick="showPage('projects')" style="margin-top:12px">Ver todas las misiones →</button>
+      <button class="more-btn" onclick="showPage('projects')" style="margin-top:12px"><span data-i18n="verTodasMisiones">Ver todas las misiones →</span></button>
     </div>
 
     <!-- ACTITUD -->
     <div class="section section-reveal">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16 4 L20 13 L29 16 L20 19 L16 28 L12 19 L3 16 L12 13Z" stroke="#3E6FA8" stroke-width="1.5" stroke-linejoin="miter"/><path d="M14.9 10.8 L17.1 11.1 L18.2 17.6 L16.3 17.6 L15.7 22.4 L13.5 15.2 L15.4 15.2Z" fill="#FBB03B"/></svg>
-        Actitud
+        <span data-i18n="actitud">Actitud</span>
       </div>
       <div class="grid-actitud" id="actitud-list">
         <div class="actitud-card">
@@ -2345,7 +2343,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="actitud-xp pos">+25 XP</div>
         </div>
       </div>
-      <button class="load-more-btn" id="actitud-btn" onclick="openActitudModal()" style="margin-top:12px">Ver todas las acciones →</button>
+      <button class="load-more-btn" id="actitud-btn" onclick="openActitudModal()" style="margin-top:12px"><span data-i18n="verTodasAcciones">Ver todas las acciones →</span></button>
     </div>
     <div style="height:24px"></div>
 
@@ -2526,11 +2524,11 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="switcher-options">
     <button class="switcher-btn active" id="sw-student" onclick="setView('student')">
       <span class="switcher-icon"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="11" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M6 28c0-5.5 4.5-9 10-9s10 3.5 10 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="switcher-label">Alumno</span>
+      <span class="switcher-label" data-i18n="alumno">Alumno</span>
     </button>
     <button class="switcher-btn" id="sw-family" onclick="setView('family')">
       <span class="switcher-icon"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><circle cx="11" cy="11" r="4" stroke="currentColor" stroke-width="1.8"/><circle cx="21" cy="11" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 28c0-4 3-7 7-7h10c4 0 7 3 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <span class="switcher-label">Familia</span>
+      <span class="switcher-label" data-i18n="familia">Familia</span>
     </button>
   </div>
 </div>
@@ -2918,87 +2916,7 @@ function toggleAcardDetail(btn) {
 }
 
 // Archive data — skills with rama mapping
-const archiveMissions = [
-  {
-    name: 'Estación Meteorológica', cat: 'Electrónica', dates: '15 ene – 12 feb 2025', xp: 320,
-    desc: 'Construyó una estación con sensores reales que mide temperatura y humedad. Aprendió a conectar componentes, recoger datos y trabajar en equipo para presentar los resultados.',
-    skills: [
-      {n:'Sensores & Arduino', xp:120, rama:'Technology'},
-      {n:'Análisis de datos',  xp:100, rama:'Science'},
-      {n:'Trabajo en equipo',  xp:100, rama:'Transversals'},
-    ]
-  },
-  {
-    name: 'Videojuego en Scratch', cat: 'Programación', dates: '3 nov – 28 nov 2024', xp: 280,
-    desc: 'Diseñó y programó su propio videojuego de principio a fin: inventó los personajes, escribió las reglas y publicó el juego para que sus compañeros pudieran jugarlo.',
-    skills: [
-      {n:'Lógica de programación', xp:130, rama:'Technology'},
-      {n:'Diseño de personajes',   xp:80,  rama:'Art'},
-      {n:'Creatividad narrativa',  xp:70,  rama:'Transversals'},
-    ]
-  },
-  {
-    name: 'Puente de Espaguetis', cat: 'Ingeniería', dates: '5 oct – 25 oct 2024', xp: 200,
-    desc: 'En equipo diseñó y construyó un puente usando solo espaguetis y cinta adhesiva. Lo pusieron a prueba cargando peso hasta el límite y analizaron por qué aguantó o falló.',
-    skills: [
-      {n:'Resistencia materiales', xp:90, rama:'Engineering'},
-      {n:'Trabajo cooperativo',    xp:70, rama:'Transversals'},
-      {n:'Prototipado',            xp:40, rama:'Engineering'},
-    ]
-  },
-  {
-    name: 'App de Reciclaje', cat: 'Programación', dates: '10 sep – 2 oct 2024', xp: 250,
-    desc: 'Ideó y prototipó una app para motivar a reciclar en casa. Diseñó la experiencia de usuario, pensó en los mensajes y demostró que la tecnología puede ayudar al medioambiente.',
-    skills: [
-      {n:'Diseño de apps', xp:110, rama:'Technology'},
-      {n:'Sostenibilidad', xp:80,  rama:'Science'},
-      {n:'UX Design',      xp:60,  rama:'Art'},
-    ]
-  },
-  {
-    name: 'Planetario Virtual', cat: 'Ciencia', dates: '5 jun – 28 jun 2024', xp: 210,
-    desc: 'Recreó el sistema solar en un planetario interactivo y lo presentó a toda la clase. Investigó datos reales de la NASA y aprendió a comunicar ciencia de forma visual y amena.',
-    skills: [
-      {n:'Astronomía',       xp:90, rama:'Science'},
-      {n:'Presentación oral',xp:70, rama:'Transversals'},
-      {n:'Investigación',    xp:50, rama:'Science'},
-    ]
-  },
-  {
-    name: 'Casa Domótica', cat: 'IoT', dates: '5 mar – 28 mar 2024', xp: 230,
-    desc: 'Construyó una maqueta de casa inteligente con luces automáticas y sensores de movimiento. Programó los comportamientos y explicó cómo la domótica hace la vida más cómoda.',
-    skills: [
-      {n:'Electrónica',    xp:100, rama:'Technology'},
-      {n:'Automatización', xp:80,  rama:'Engineering'},
-      {n:'Programación',   xp:50,  rama:'Technology'},
-    ]
-  },
-  {
-    name: 'Cañón de Aire', cat: 'Física', dates: '3 may – 24 may 2024', xp: 180,
-    desc: 'Construyó un cañón casero que lanza aros de aire y usó el experimento para entender cómo se comportan los fluidos. Midió distancias, comparó resultados y sacó sus propias conclusiones.',
-    skills: [
-      {n:'Aerodinámica',    xp:80, rama:'Science'},
-      {n:'Matemáticas',     xp:60, rama:'Maths'},
-      {n:'Experimentación', xp:40, rama:'Science'},
-    ]
-  },
-  {
-    name: 'Llavero 3D', cat: 'Diseño 3D', dates: '1 abr – 19 abr 2024', xp: 160,
-    desc: 'Diseñó su propio llavero personalizado desde cero en software 3D y lo imprimió. Pasó de una idea en papel a un objeto físico que se puede tocar, aprendiendo todo el proceso de fabricación digital.',
-    skills: [
-      {n:'Modelado 3D',  xp:90, rama:'Art'},
-      {n:'Impresión 3D', xp:40, rama:'Engineering'},
-      {n:'Creatividad',  xp:30, rama:'Art'},
-    ]
-  },
-];
-
-function renderArchive() {
-  const grid = document.getElementById('archive-grid');
-  if (!grid) return;
-  grid.innerHTML = archiveMissions.slice(0, 8).map((m,i) => buildArchiveCard(m, m.name+i)).join('');
-}
-renderArchive();
+let archiveMissions = []; // populated after I18N init
 
 // Re-render archive when palette changes (colours derive from CSS vars)
 
@@ -3171,26 +3089,7 @@ const missionSkillIcons = {
   build: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="#fff" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
 };
 
-const activeMissions = [
-  {
-    name: 'Robot Explorador', cat: 'Robótica', illus: 'robotica', target: '500',
-    skills: [
-      { n:'Programación', i:'prog', c:'#3E6FA8' },
-      { n:'Electrónica',  i:'elec', c:'#FBB03B' },
-      { n:'Diseño mecánico', i:'mech', c:'#2596BE' },
-      { n:'Resolución',   i:'idea', c:'#7CB8F5' },
-    ]
-  },
-  {
-    name: 'Ciudad del Futuro 3D', cat: 'Diseño 3D', illus: 'diseno3d', target: '420',
-    skills: [
-      { n:'Modelado 3D',  i:'cube',   c:'#3E6FA8' },
-      { n:'Creatividad',  i:'create', c:'#FBB03B' },
-      { n:'Sostenibilidad',i:'eco',   c:'#16a34a' },
-    ]
-  },
-];
-
+let activeMissions = []; // populated after I18N init
 const boltBigSVG = `<svg width="34" height="34" viewBox="${BOLT_VB_DEFAULT}" fill="none"><path d="${BOLT_PATH_DEFAULT}" fill="#FBB03B"/></svg>`;
 
 function missionCardHTML(m) {
@@ -3226,6 +3125,12 @@ function missionCardHTML(m) {
   </div>`;
 }
 
+function renderArchive() {
+  const grid = document.getElementById('archive-grid');
+  if (!grid) return;
+  grid.innerHTML = archiveMissions.slice(0, 8).map((m, i) => buildArchiveCard(m, m.name + i)).join('');
+}
+
 function renderMissions() {
   const grid = document.getElementById('mission-grid');
   if (!grid) return;
@@ -3233,7 +3138,7 @@ function renderMissions() {
   grid.className = 'mission-grid ' + (count === 1 ? 'single' : 'double');
   grid.innerHTML = activeMissions.map(missionCardHTML).join('');
 }
-renderMissions();
+// renderMissions() called after DOMContentLoaded
 
 // ── TOPBAR COLLAPSE ────────────────────────────────────────────
 const topbar = document.getElementById('topbar');
@@ -3252,13 +3157,861 @@ if (sentinel && topbarWrapper) {
 }
 
 // ── LANG ───────────────────────────────────────────────────────
-function setLang(code) {
-  ['ESP','ENG','CAT'].forEach(l => {
-    document.getElementById('lang-'+l).classList.toggle('active', l===code);
-    const mb = document.getElementById('modal-lang-'+l);
-    if (mb) mb.classList.toggle('active', l===code);
+// ── Data arrays — declared here, filled after I18N is defined ──
+let allActitudes = [];
+let allProjects  = [];
+let frases       = [];
+var FAM_MOMENTS  = [];
+
+// ── i18n — FULL TRANSLATIONS (ESP / ENG / CAT) ──────────────────
+// Covers: portal alumno + portal familia + all JS data arrays
+const I18N = {
+// ══════════════════════════════════════════════════════════════════
+ESP: {
+  // ── UI chrome ──────────────────────────────────────────────
+  nivel:'Nivel', alumno:'Alumno', familia:'Familia',
+  modoClasico:'Modo Clásico', eligeTuMundo:'🎨 Elige tu mundo',
+  volverInicio:'← Volver a inicio', volver:'Volver',
+  anterior:'Anterior', siguiente:'Siguiente',
+  todasMisiones:'Todas las misiones',
+  verTodasMisiones:'Ver todas las misiones →',
+  verTodasAcciones:'Ver todas las acciones →',
+  misionActiva:'Misión activa', miGalaxia:'Mi Galaxia de Poderes',
+  archivoMisiones:'Archivo de misiones', actitud:'Actitud',
+  proximamente:'Próximamente disponible.',
+  vistaFamilia:'Vista de Familia',
+  // ── XP ─────────────────────────────────────────────────────
+  xpLeft: n => 'Nivel ' + n,
+  xpRight: (xp,next) => xp + ' XP para Nivel ' + next,
+  // ── Level names ────────────────────────────────────────────
+  levelNames:['','Explorador','Constructor','Inventor','Maker','Innovador','Creador','Héroe Digital','Maestro','Visionario','Leyenda'],
+  // ── Palettes ───────────────────────────────────────────────
+  paletteNames:{amarillo:'Clásico',caramelo:'Desierto',bosque:'Bosque',oceano:'Océano',nieve:'Nieve',crepusculo:'Crepúsculo',neon:'Neón',cosmos:'Cosmos'},
+  palettePrefixes:{amarillo:'Modo Clásico',caramelo:'Modo Desierto',bosque:'Modo Bosque',oceano:'Modo Océano',nieve:'Modo Nieve',crepusculo:'Modo Crepúsculo',neon:'Modo Neón',cosmos:'Modo Cosmos'},
+  paletteSub:{amarillo:'Colinas al sol',caramelo:'Dunas al atardecer',bosque:'Montañas y pinos',oceano:'Costa y olas',nieve:'Montañas heladas',crepusculo:'Atardecer mágico',neon:'Ciudad futurista',cosmos:'Planetas y estrellas'},
+  paletteModalTitle:'🎨 Elige tu mundo',
+  // ── Modals ─────────────────────────────────────────────────
+  personalizaPersonaje:'Personaliza tu personaje',
+  tabPersonaje:'Personaje', tabColor:'Tipo', tabAcc:'Accesorios',
+  mascotSubShape:'Elige tu personaje. Cada uno tiene su propio tipo de base.',
+  mascotSubColor:'Cambia el tipo de tu personaje. Se desbloquean más al subir de nivel.',
+  mascotSubAcc:'Pon un accesorio a tu personaje. Se desbloquean más al subir de nivel.',
+  eligeRayo:'Elige tu rayo',
+  eligeRayoSub:'Cada rayo tiene su propio estilo. Desbloqueas más al subir de nivel.',
+  eligeLema:'Elige tu lema',
+  eligeLemaSub:'Toca una frase para que aparezca en tu bocadillo. Se desbloquean más al subir de nivel.',
+  // ── Galaxia ────────────────────────────────────────────────
+  gxNiveles:'Niveles', gxRadar:'Radar', gxDespegues:'Despegues',
+  gxTitle:'Mi Galaxia de Poderes', gxKicker:'Ignite Nexus · Mi progreso',
+  gxXP:'XP total', gxPoderes:'poderes', gxMasFuerte:'más fuerte',
+  gxReplay:'Lanzar', gxAmpliar:'Ampliar',
+  gxVerPoderes: n => 'Ver ' + n + ' poderes',
+  gxTop:'Top',
+  // ── Actitud modal ──────────────────────────────────────────
+  actitudModalTitle:'Registro de actitud',
+  actitudModalHead:'Todas las acciones.',
+  actitudModalSub:'El registro completo de actitud — positiva y negativa.',
+  // ── Locked palette alert ───────────────────────────────────
+  lockedAlert: (name, lv) => '🔒 Desbloqueas «' + name + '» en el Nivel ' + lv + '. ¡Sigue sumando XP!',
+  enCurso:'En curso',
+  recompensaMaxima:'Recompensa máxima',
+  poderesQueEntrena:'Poderes que entrena',
+  verTodasPag:'Ver todas las misiones →',
+  // ── Dates ──────────────────────────────────────────────────
+  fechaFormato: d => d, // dates stay as-is in ESP
+  // ── RAMAS titles ───────────────────────────────────────────
+  ramasTitles:{Science:'Explorador',Technology:'Constructor',Engineering:'Maker',Art:'Creador',Maths:'Solucionador',Transversals:'Líder'},
+  // ── Skill descriptions (RAMAS) ─────────────────────────────
+  skillDescs:{
+    'Física':'Descubre cómo se mueven las cosas: fuerzas, energía y movimiento.',
+    'Química':'Mezcla, reacciona y entiende de qué está hecho todo.',
+    'Biología':'Explora los seres vivos, desde las células hasta los ecosistemas.',
+    'Método científico':'Observa, plantea hipótesis y compruébalas con experimentos.',
+    'Arduino & Hardware':'Conecta sensores y placas para dar vida a tus inventos.',
+    'Python':'Programa con uno de los lenguajes más usados del mundo.',
+    'IA & Datos':'Enseña a las máquinas a aprender a partir de datos.',
+    'Machine Learning':'Crea modelos que reconocen patrones y hacen predicciones.',
+    'Apps & Web':'Diseña y construye aplicaciones y páginas web.',
+    'Bases de datos':'Guarda y organiza la información de forma eficiente.',
+    'IoT':'Conecta objetos cotidianos a internet.',
+    'Robótica software':'Programa el cerebro que mueve a los robots.',
+    'Electrónica digital':'Entiende circuitos, señales y lógica digital.',
+    'Ciberseguridad':'Protege sistemas y datos frente a los ataques.',
+    'Redes':'Conecta ordenadores para que hablen entre sí.',
+    'Cloud':'Usa servidores en la nube para tus proyectos.',
+    'Diseño mecánico':'Idea piezas y mecanismos que funcionan de verdad.',
+    'Prototipado':'Construye versiones de prueba para mejorar tus ideas.',
+    'Estructuras':'Diseña construcciones firmes y resistentes.',
+    'CAD':'Dibuja tus diseños en 3D con el ordenador.',
+    'Modelado 3D':'Esculpe objetos y personajes en tres dimensiones.',
+    'Diseño visual':'Combina color, forma y composición con estilo.',
+    'Ilustración':'Da vida a tus ideas dibujando.',
+    'Música':'Crea tus propios ritmos y melodías.',
+    'Geometría':'Juega con figuras, ángulos y el espacio.',
+    'Álgebra':'Resuelve enigmas usando letras y números.',
+    'Lógica':'Razona paso a paso para resolver problemas.',
+    'Estadística':'Recoge datos y descubre qué nos cuentan.',
+    'Trabajo en equipo':'Colabora y suma fuerzas con los demás.',
+    'Comunicación':'Expresa tus ideas con claridad y seguridad.',
+    'Liderazgo':'Guía e inspira a tu grupo hacia una meta.',
+    'Gestión del tiempo':'Organiza tus tareas y cumple los plazos.',
+    'Creatividad':'Encuentra ideas nuevas y originales.',
+  },
+  // ── Archive missions ───────────────────────────────────────
+  archiveMissions:[
+    {name:'Estación Meteorológica',cat:'Electrónica',dates:'15 ene – 12 feb 2025',xp:320,desc:'Construyó una estación con sensores reales que mide temperatura y humedad. Aprendió a conectar componentes, recoger datos y trabajar en equipo para presentar los resultados.',skills:[{n:'Sensores & Arduino',xp:120,rama:'Technology'},{n:'Análisis de datos',xp:100,rama:'Science'},{n:'Trabajo en equipo',xp:100,rama:'Transversals'}]},
+    {name:'Videojuego en Scratch',cat:'Programación',dates:'3 nov – 28 nov 2024',xp:280,desc:'Diseñó y programó su propio videojuego de principio a fin: inventó los personajes, escribió las reglas y publicó el juego para que sus compañeros pudieran jugarlo.',skills:[{n:'Lógica de programación',xp:130,rama:'Technology'},{n:'Diseño de personajes',xp:80,rama:'Art'},{n:'Creatividad narrativa',xp:70,rama:'Transversals'}]},
+    {name:'Puente de Espaguetis',cat:'Ingeniería',dates:'5 oct – 25 oct 2024',xp:200,desc:'En equipo diseñó y construyó un puente usando solo espaguetis y cinta adhesiva. Lo pusieron a prueba cargando peso hasta el límite y analizaron por qué aguantó o falló.',skills:[{n:'Resistencia materiales',xp:90,rama:'Engineering'},{n:'Trabajo cooperativo',xp:70,rama:'Transversals'},{n:'Prototipado',xp:40,rama:'Engineering'}]},
+    {name:'App de Reciclaje',cat:'Programación',dates:'10 sep – 2 oct 2024',xp:250,desc:'Ideó y prototipó una app para motivar a reciclar en casa. Diseñó la experiencia de usuario, pensó en los mensajes y demostró que la tecnología puede ayudar al medioambiente.',skills:[{n:'Diseño de apps',xp:110,rama:'Technology'},{n:'Sostenibilidad',xp:80,rama:'Science'},{n:'UX Design',xp:60,rama:'Art'}]},
+    {name:'Planetario Virtual',cat:'Ciencia',dates:'5 jun – 28 jun 2024',xp:210,desc:'Recreó el sistema solar en un planetario interactivo y lo presentó a toda la clase. Investigó datos reales de la NASA y aprendió a comunicar ciencia de forma visual y amena.',skills:[{n:'Astronomía',xp:90,rama:'Science'},{n:'Presentación oral',xp:70,rama:'Transversals'},{n:'Investigación',xp:50,rama:'Science'}]},
+    {name:'Casa Domótica',cat:'IoT',dates:'5 mar – 28 mar 2024',xp:230,desc:'Construyó una maqueta de casa inteligente con luces automáticas y sensores de movimiento. Programó los comportamientos y explicó cómo la domótica hace la vida más cómoda.',skills:[{n:'Electrónica',xp:100,rama:'Technology'},{n:'Automatización',xp:80,rama:'Engineering'},{n:'Programación',xp:50,rama:'Technology'}]},
+    {name:'Cañón de Aire',cat:'Física',dates:'3 may – 24 may 2024',xp:180,desc:'Construyó un cañón casero que lanza aros de aire y usó el experimento para entender cómo se comportan los fluidos. Midió distancias, comparó resultados y sacó sus propias conclusiones.',skills:[{n:'Aerodinámica',xp:80,rama:'Science'},{n:'Matemáticas',xp:60,rama:'Maths'},{n:'Experimentación',xp:40,rama:'Science'}]},
+    {name:'Llavero 3D',cat:'Diseño 3D',dates:'1 abr – 19 abr 2024',xp:160,desc:'Diseñó su propio llavero personalizado desde cero en software 3D y lo imprimió. Pasó de una idea en papel a un objeto físico que se puede tocar, aprendiendo todo el proceso de fabricación digital.',skills:[{n:'Modelado 3D',xp:90,rama:'Art'},{n:'Impresión 3D',xp:40,rama:'Engineering'},{n:'Creatividad',xp:30,rama:'Art'}]},
+  ],
+  // ── Active missions ────────────────────────────────────────
+  activeMissions:[
+    {name:'Robot Explorador',cat:'Robótica',illus:'robotica',target:'500',skills:[{n:'Programación',i:'prog',c:'#3E6FA8'},{n:'Electrónica',i:'elec',c:'#FBB03B'},{n:'Diseño mecánico',i:'mech',c:'#2596BE'},{n:'Resolución',i:'idea',c:'#7CB8F5'}]},
+    {name:'Ciudad del Futuro 3D',cat:'Diseño 3D',illus:'diseno3d',target:'420',skills:[{n:'Modelado 3D',i:'cube',c:'#3E6FA8'},{n:'Creatividad',i:'create',c:'#FBB03B'},{n:'Sostenibilidad',i:'eco',c:'#16a34a'}]},
+  ],
+  // ── All projects ───────────────────────────────────────────
+  allProjects:[
+    {name:'Robot Explorador',dates:'En curso',cat:'Robótica',skills:[{n:'Programación Arduino',x:0},{n:'Sensores',x:0},{n:'Diseño mecánico',x:0}],xp:'En curso'},
+    {name:'Estación Meteorológica',dates:'15 ene – 12 feb 2025',cat:'Electrónica',skills:[{n:'Sensores & Arduino',x:120},{n:'Análisis de datos',x:100},{n:'Trabajo en equipo',x:100}],xp:320},
+    {name:'Videojuego en Scratch',dates:'3 nov – 28 nov 2024',cat:'Programación',skills:[{n:'Lógica de programación',x:130},{n:'Diseño de personajes',x:80},{n:'Creatividad narrativa',x:70}],xp:280},
+    {name:'Puente de Espaguetis',dates:'5 oct – 25 oct 2024',cat:'Ingeniería',skills:[{n:'Resistencia de materiales',x:90},{n:'Trabajo cooperativo',x:70},{n:'Prototipado',x:40}],xp:200},
+    {name:'App de Reciclaje',dates:'10 sep – 2 oct 2024',cat:'Programación',skills:[{n:'Diseño de apps',x:110},{n:'Sostenibilidad',x:80},{n:'UX Design',x:60}],xp:250},
+    {name:'Planetario Virtual',dates:'5 jun – 28 jun 2024',cat:'Ciencia',skills:[{n:'Astronomía',x:100},{n:'Presentación oral',x:80},{n:'Investigación',x:70}],xp:250},
+    {name:'Cañón de Aire',dates:'3 may – 24 may 2024',cat:'Física',skills:[{n:'Aerodinámica',x:90},{n:'Matemáticas',x:80},{n:'Experimentación',x:60}],xp:230},
+    {name:'Llavero 3D',dates:'1 abr – 19 abr 2024',cat:'Diseño 3D',skills:[{n:'Modelado 3D',x:120},{n:'Impresión 3D',x:80},{n:'Creatividad',x:50}],xp:250},
+    {name:'Casa Domótica',dates:'5 mar – 28 mar 2024',cat:'IoT',skills:[{n:'Electrónica',x:110},{n:'Automatización',x:90},{n:'Programación',x:80}],xp:280},
+    {name:'Generador Musical IA',dates:'2 feb – 22 feb 2024',cat:'IA',skills:[{n:'Machine Learning',x:130},{n:'Música',x:100},{n:'Python',x:90}],xp:320},
+    {name:'Monitor de Agua',dates:'10 ene – 30 ene 2024',cat:'Ciencia',skills:[{n:'Química',x:80},{n:'Sensores',x:90},{n:'Datos',x:70}],xp:240},
+    {name:'Coche Autónomo',dates:'5 dic – 20 dic 2023',cat:'Robótica',skills:[{n:'Control PID',x:120},{n:'Visión artificial',x:100},{n:'Electrónica',x:80}],xp:300},
+    {name:'Brazo Robótico',dates:'1 nov – 25 nov 2023',cat:'Robótica',skills:[{n:'Servomotores',x:110},{n:'Programación',x:100},{n:'Diseño',x:70}],xp:280},
+    {name:'Radio AM Casera',dates:'5 oct – 28 oct 2023',cat:'Electrónica',skills:[{n:'Ondas',x:90},{n:'Circuitos',x:100},{n:'Soldadura',x:60}],xp:250},
+  ],
+  // ── Actitudes ──────────────────────────────────────────────
+  allActitudes:[
+    {pos:true,name:'Ayudó a un compañero',date:'14 may 2025',xp:'+20 XP'},
+    {pos:true,name:'Participación excepcional',date:'12 may 2025',xp:'+30 XP'},
+    {pos:false,name:'Llegó tarde a clase',date:'8 may 2025',xp:'-10 XP'},
+    {pos:true,name:'Idea creativa destacada',date:'5 may 2025',xp:'+25 XP'},
+    {pos:true,name:'Liderazgo en grupo',date:'2 may 2025',xp:'+20 XP'},
+    {pos:false,name:'No entregó tarea a tiempo',date:'28 abr 2025',xp:'-15 XP'},
+    {pos:true,name:'Mejor proyecto de la semana',date:'25 abr 2025',xp:'+50 XP'},
+    {pos:true,name:'Documentó su proyecto',date:'22 abr 2025',xp:'+15 XP'},
+    {pos:true,name:'Presentó su trabajo al grupo',date:'18 abr 2025',xp:'+20 XP'},
+    {pos:false,name:'Interrumpió la clase',date:'14 abr 2025',xp:'-10 XP'},
+    {pos:true,name:'Resolvió un reto en equipo',date:'10 abr 2025',xp:'+25 XP'},
+    {pos:true,name:'Ayudó a organizar el espacio',date:'5 abr 2025',xp:'+15 XP'},
+  ],
+  // ── Frases / lemas ─────────────────────────────────────────
+  frases:[
+    {id:'ignite',text:"¡Let's Ignite!",minLevel:1,icon:'⚡'},
+    {id:'aprendo',text:'Aprendo un poco más cada día',minLevel:1,icon:'📚'},
+    {id:'error',text:'Los errores me hacen crecer',minLevel:1,icon:'🌱'},
+    {id:'crear',text:'Crear es mi superpoder',minLevel:2,icon:'✨'},
+    {id:'curioso',text:'La curiosidad no tiene límites',minLevel:2,icon:'🔭'},
+    {id:'equipo',text:'Juntos llegamos más lejos',minLevel:3,icon:'🤝'},
+    {id:'pregunta',text:'Cada pregunta abre una puerta',minLevel:3,icon:'🚪'},
+    {id:'reto',text:'Los retos son oportunidades',minLevel:4,icon:'🏆'},
+    {id:'codigo',text:'El código es mi idioma',minLevel:4,icon:'💻'},
+    {id:'persiste',text:'Persistir es la clave',minLevel:5,icon:'🔑'},
+    {id:'imagine',text:'Imagina, diseña, construye',minLevel:5,icon:'🛠️'},
+    {id:'impacto',text:'Quiero cambiar el mundo',minLevel:6,icon:'🌍'},
+    {id:'robot',text:'Dominaré la robótica',minLevel:6,icon:'🤖'},
+    {id:'datos',text:'Los datos cuentan historias',minLevel:7,icon:'📊'},
+    {id:'conecto',text:'Conecto ideas para innovar',minLevel:7,icon:'💡'},
+    {id:'heroe',text:'Soy héroe de mi aprendizaje',minLevel:8,icon:'⚔️'},
+    {id:'future',text:'El futuro lo construyo hoy',minLevel:9,icon:'🚀'},
+    {id:'legend',text:'Seré una leyenda del código',minLevel:10,icon:'🌟'},
+  ],
+  // ── Bolts ──────────────────────────────────────────────────
+  boltTaglines:{sparkle:'El original · energía pura',ferri:'Velocidad · potencia · pasión',apfel:'Diseño · simplicidad · magia',teslo:'Eléctrico · futuro · silencioso',galaxi:'Infinito · cosmos · innovación',nextra:'Just do it · sin límites',goog:'Curiosidad · colores · saber',spotif:'Ritmo · verde · música',amazo:'Todo · rápido · para ti',netti:'Drama · épica · acción'},
+  // ── Mascots ────────────────────────────────────────────────
+  mascotDescs:{spark:'Bolita amistosa · el inicial',ember:'Llama · espíritu de fuego',pixel:'Robot · el hacker amigable',bolt:'Rayo · velocidad pura',nova:'Planeta · energía cósmica',sage:'Brote · sabiduría del bosque'},
+  mascotTipos:{spark:'Tipo Normal',ember:'Tipo Fuego',pixel:'Tipo Técnico',bolt:'Tipo Rayo',nova:'Tipo Cosmos',sage:'Tipo Tierra'},
+  // ── Accessories ────────────────────────────────────────────
+  accNames:{none:'Ninguno',gafas:'Gafas',gasol:'Gafas de sol',sombrero:'Sombrero',gorra:'Gorra',corona:'Corona',antenas:'Antenas',halo:'Halo',bowtie:'Pajarita',mochila:'Mochila',capa:'Capa'},
+  // ── Color names ────────────────────────────────────────────
+  colorNames:{normal:'Normal',fuego:'Fuego',tecnico:'Técnico',rayo:'Rayo',cosmos:'Cosmos',agua:'Agua',hada:'Hada',tierra:'Tierra'},
+  // ── Family portal ──────────────────────────────────────────
+  famEspacio:'Espacio de la familia',
+  famSchool:'CEIP San Pablo, Madrid',
+  famGroups:'Makers 5A · Robótica Avanzada',
+  famSealText: name => 'BIENVENIDO AL UNIVERSO DE ' + name.toUpperCase() + ' · IGNITE NEXUS · ',
+  famHero1:'Mira todo lo', famHeroVerb:'que ha', famHero2:'creado.',
+  famHeroLede: name => 'Un recorrido por los proyectos, las ideas y los pequeños grandes momentos de ' + name + ' en Ignite.',
+  famScrollCue:'Desliza',
+  famSec01Eyebrow:'Ahora mismo',
+  famSec01T1:'Está en mitad de algo', famSec01T2:'grande.',
+  famSec01Lede:'Esto es lo que tiene entre manos esta temporada — y todo lo que practica por el camino.',
+  famSec02Eyebrow:'Lo que explora',
+  famSec02T1:'Seis territorios.', famSec02T3:'Una mente', famSec02T2:'inquieta.',
+  famSec02Lede:'Cada proyecto entrena varias habilidades, agrupadas en las competencias STEAM y las habilidades transversales. La barra refleja el progreso: sube rápido al principio y cuesta más a medida que avanza. Toca un área para ver qué habilidades ha desarrollado.',
+  famSec03Eyebrow:'Su colección',
+  famSec03T1:'Cosas que ha hecho con sus manos', famSec03T2:'(y su cabeza).',
+  famSec03Lede:'Sigue bajando: la colección avanza de lado. Estos son los cuatro últimos.',
+  famHorizHint:'Baja para avanzar',
+  famSec04Eyebrow:'En el aula',
+  famSec04T1:'Momentos que merecen un', famSec04T2:'marco.',
+  famSec04Lede:'Pequeñas notas que el profesorado recoge clase a clase: logros, gestos y algún recordatorio amable.',
+  famVerMomentos:'Ver todos los momentos',
+  famEnCurso:'En curso',
+  famLoQuePractica:'Lo que practica', famLoQueAprendio:'Lo que aprendió',
+  famVerTodos:'Verlos todos', famVerLoQueAprendio:'Ver lo que aprendió',
+  famProgreso:'Progreso', famHabilidades:'habilidades',
+  famClose1: name => 'Gracias por acompañar a ' + name + '. Cada proyecto suma a la',
+  famCloseEm:'persona', famClose2:'que está construyendo.',
+  famCloseSign:'El equipo de Ignite',
+  famCloseSub:'¿Quieres comentar su progreso? Habla con el profesorado en la próxima sesión.',
+  famAllTitle:'Todo lo que ha creado.',
+  famAllSub: name => 'La colección completa de proyectos de ' + name + '. Abre cualquiera para ver qué aprendió.',
+  famAllOverlayTitle:'Toda la colección',
+  famMomTitle:'Momentos que merecen un marco.',
+  famMomOverlayTitle:'Momentos en el aula',
+  famMomSub:'Todo lo que el profesorado ha recogido clase a clase.',
+  famFooter: name => '· Espacio de la familia de ' + name + ' · Curso 2024–25',
+  famMoments:[
+    {date:'14 may 2025',type:'good',cat:'Compañerismo',name:'Ayudó a un compañero',text:'Echó una mano a un compañero que se había atascado.'},
+    {date:'12 may 2025',type:'good',cat:'Participación',name:'Participación excepcional',text:'Participó con muchas ganas y aportó ideas al equipo.'},
+    {date:'8 may 2025',type:'note',cat:'Puntualidad',name:'Llegó un poco tarde',text:'Esta vez llegó algo tarde. Un pequeño recordatorio.'},
+    {date:'5 may 2025',type:'good',cat:'Creatividad',name:'Idea creativa destacada',text:'Sorprendió con una idea original para resolver el reto.'},
+    {date:'2 may 2025',type:'good',cat:'Liderazgo',name:'Liderazgo en el grupo',text:'Tomó la iniciativa y organizó a su grupo.'},
+    {date:'28 abr 2025',type:'note',cat:'Tareas',name:'Una tarea sin terminar',text:'No llegó a terminar la tarea. Lo retomará con tranquilidad.'},
+    {date:'25 abr 2025',type:'good',cat:'Proyecto',name:'Mejor proyecto de la semana',text:'Su proyecto fue elegido el mejor de la semana.'},
+    {date:'22 abr 2025',type:'good',cat:'Constancia',name:'Documentó su proyecto',text:'Dedicó tiempo a documentar su proyecto con detalle.'},
+  ],
+},
+// ══════════════════════════════════════════════════════════════════
+ENG: {
+  nivel:'Level', alumno:'Student', familia:'Family',
+  modoClasico:'Classic Mode', eligeTuMundo:'🎨 Choose your world',
+  volverInicio:'← Back to home', volver:'Back',
+  anterior:'Previous', siguiente:'Next',
+  todasMisiones:'All missions',
+  verTodasMisiones:'View all missions →',
+  verTodasAcciones:'View all actions →',
+  misionActiva:'Active mission', miGalaxia:'My Galaxy of Powers',
+  archivoMisiones:'Mission archive', actitud:'Attitude',
+  proximamente:'Coming soon.',
+  vistaFamilia:'Family view',
+  xpLeft: n => 'Level ' + n,
+  xpRight: (xp,next) => xp + ' XP to Level ' + next,
+  levelNames:['','Explorer','Builder','Inventor','Maker','Innovator','Creator','Digital Hero','Master','Visionary','Legend'],
+  paletteNames:{amarillo:'Classic',caramelo:'Desert',bosque:'Forest',oceano:'Ocean',nieve:'Snow',crepusculo:'Twilight',neon:'Neon',cosmos:'Cosmos'},
+  palettePrefixes:{amarillo:'Classic Mode',caramelo:'Desert Mode',bosque:'Forest Mode',oceano:'Ocean Mode',nieve:'Snow Mode',crepusculo:'Twilight Mode',neon:'Neon Mode',cosmos:'Cosmos Mode'},
+  paletteSub:{amarillo:'Sunny hills',caramelo:'Desert dunes',bosque:'Mountains & pines',oceano:'Coast & waves',nieve:'Frozen peaks',crepusculo:'Magic twilight',neon:'Future city',cosmos:'Planets & stars'},
+  paletteModalTitle:'🎨 Choose your world',
+  personalizaPersonaje:'Customize your character',
+  tabPersonaje:'Character', tabColor:'Type', tabAcc:'Accessories',
+  mascotSubShape:'Choose your character. Each one has its own base type.',
+  mascotSubColor:'Change your character type. More unlock as you level up.',
+  mascotSubAcc:'Give your character an accessory. More unlock as you level up.',
+  eligeRayo:'Choose your bolt',
+  eligeRayoSub:'Each bolt has its own style. Unlock more as you level up.',
+  eligeLema:'Choose your motto',
+  eligeLemaSub:'Tap a phrase to show it in your speech bubble. More unlock as you level up.',
+  gxNiveles:'Levels', gxRadar:'Radar', gxDespegues:'Launches',
+  gxTitle:'My Galaxy of Powers', gxKicker:'Ignite Nexus · My progress',
+  gxXP:'Total XP', gxPoderes:'powers', gxMasFuerte:'strongest',
+  gxReplay:'Launch', gxAmpliar:'Expand',
+  gxVerPoderes: n => 'See ' + n + ' powers',
+  gxTop:'Top',
+  actitudModalTitle:'Attitude log',
+  actitudModalHead:'All actions.',
+  actitudModalSub:'The complete attitude record — positive and negative.',
+  lockedAlert: (name, lv) => '🔒 You unlock «' + name + '» at Level ' + lv + '. Keep earning XP!',
+  enCurso:'In progress',
+  recompensaMaxima:'Max reward',
+  poderesQueEntrena:'Powers it trains',
+  verTodasPag:'View all missions →',
+  fechaFormato: d => d,
+  ramasTitles:{Science:'Explorer',Technology:'Builder',Engineering:'Maker',Art:'Creator',Maths:'Solver',Transversals:'Leader'},
+  skillDescs:{
+    'Física':'Discover how things move: forces, energy and motion.',
+    'Química':'Mix, react and understand what everything is made of.',
+    'Biología':'Explore living beings, from cells to ecosystems.',
+    'Método científico':'Observe, hypothesise and test with experiments.',
+    'Arduino & Hardware':'Connect sensors and boards to bring your inventions to life.',
+    'Python':'Code with one of the world\'s most used languages.',
+    'IA & Datos':'Teach machines to learn from data.',
+    'Machine Learning':'Build models that recognise patterns and make predictions.',
+    'Apps & Web':'Design and build applications and websites.',
+    'Bases de datos':'Store and organise information efficiently.',
+    'IoT':'Connect everyday objects to the internet.',
+    'Robótica software':'Program the brain that moves robots.',
+    'Electrónica digital':'Understand circuits, signals and digital logic.',
+    'Ciberseguridad':'Protect systems and data from attacks.',
+    'Redes':'Connect computers so they can communicate.',
+    'Cloud':'Use cloud servers for your projects.',
+    'Diseño mecánico':'Design parts and mechanisms that really work.',
+    'Prototipado':'Build test versions to improve your ideas.',
+    'Estructuras':'Design strong and sturdy constructions.',
+    'CAD':'Draw your designs in 3D on a computer.',
+    'Modelado 3D':'Sculpt objects and characters in three dimensions.',
+    'Diseño visual':'Combine colour, shape and composition with style.',
+    'Ilustración':'Bring your ideas to life by drawing.',
+    'Música':'Create your own rhythms and melodies.',
+    'Geometría':'Play with shapes, angles and space.',
+    'Álgebra':'Solve puzzles using letters and numbers.',
+    'Lógica':'Reason step by step to solve problems.',
+    'Estadística':'Collect data and discover what it tells us.',
+    'Trabajo en equipo':'Collaborate and pool strengths with others.',
+    'Comunicación':'Express your ideas clearly and confidently.',
+    'Liderazgo':'Guide and inspire your group towards a goal.',
+    'Gestión del tiempo':'Organise your tasks and meet deadlines.',
+    'Creatividad':'Find new and original ideas.',
+  },
+  archiveMissions:[
+    {name:'Weather Station',cat:'Electronics',dates:'15 Jan – 12 Feb 2025',xp:320,desc:'Built a real sensor station measuring temperature and humidity. Learned to wire components, collect data and work as a team to present findings.',skills:[{n:'Sensors & Arduino',xp:120,rama:'Technology'},{n:'Data analysis',xp:100,rama:'Science'},{n:'Teamwork',xp:100,rama:'Transversals'}]},
+    {name:'Scratch Video Game',cat:'Programming',dates:'3 Nov – 28 Nov 2024',xp:280,desc:'Designed and programmed their own video game from scratch: invented characters, wrote the rules and published it for classmates to play.',skills:[{n:'Programming logic',xp:130,rama:'Technology'},{n:'Character design',xp:80,rama:'Art'},{n:'Creative writing',xp:70,rama:'Transversals'}]},
+    {name:'Spaghetti Bridge',cat:'Engineering',dates:'5 Oct – 25 Oct 2024',xp:200,desc:'Designed and built a bridge using only spaghetti and tape. Tested it by loading weights to the limit and analysed why it held or failed.',skills:[{n:'Material strength',xp:90,rama:'Engineering'},{n:'Cooperative work',xp:70,rama:'Transversals'},{n:'Prototyping',xp:40,rama:'Engineering'}]},
+    {name:'Recycling App',cat:'Programming',dates:'10 Sep – 2 Oct 2024',xp:250,desc:'Conceived and prototyped an app to motivate recycling at home. Designed the user experience and showed how tech can help the environment.',skills:[{n:'App design',xp:110,rama:'Technology'},{n:'Sustainability',xp:80,rama:'Science'},{n:'UX Design',xp:60,rama:'Art'}]},
+    {name:'Virtual Planetarium',cat:'Science',dates:'5 Jun – 28 Jun 2024',xp:210,desc:'Recreated the solar system in an interactive planetarium and presented it to the class. Researched real NASA data and learned to communicate science visually.',skills:[{n:'Astronomy',xp:90,rama:'Science'},{n:'Oral presentation',xp:70,rama:'Transversals'},{n:'Research',xp:50,rama:'Science'}]},
+    {name:'Smart Home',cat:'IoT',dates:'5 Mar – 28 Mar 2024',xp:230,desc:'Built a smart home model with automatic lights and motion sensors. Programmed behaviours and explained how home automation improves comfort.',skills:[{n:'Electronics',xp:100,rama:'Technology'},{n:'Automation',xp:80,rama:'Engineering'},{n:'Programming',xp:50,rama:'Technology'}]},
+    {name:'Air Cannon',cat:'Physics',dates:'3 May – 24 May 2024',xp:180,desc:'Built a homemade cannon that fires air rings and used the experiment to understand fluid behaviour. Measured distances and drew own conclusions.',skills:[{n:'Aerodynamics',xp:80,rama:'Science'},{n:'Maths',xp:60,rama:'Maths'},{n:'Experimentation',xp:40,rama:'Science'}]},
+    {name:'3D Keyring',cat:'3D Design',dates:'1 Apr – 19 Apr 2024',xp:160,desc:'Designed a personalised keyring from scratch in 3D software and printed it. Went from a sketch to a physical object you can hold.',skills:[{n:'3D Modelling',xp:90,rama:'Art'},{n:'3D Printing',xp:40,rama:'Engineering'},{n:'Creativity',xp:30,rama:'Art'}]},
+  ],
+  activeMissions:[
+    {name:'Explorer Robot',cat:'Robotics',illus:'robotica',target:'500',skills:[{n:'Programming',i:'prog',c:'#3E6FA8'},{n:'Electronics',i:'elec',c:'#FBB03B'},{n:'Mechanical design',i:'mech',c:'#2596BE'},{n:'Problem solving',i:'idea',c:'#7CB8F5'}]},
+    {name:'City of the Future 3D',cat:'3D Design',illus:'diseno3d',target:'420',skills:[{n:'3D Modelling',i:'cube',c:'#3E6FA8'},{n:'Creativity',i:'create',c:'#FBB03B'},{n:'Sustainability',i:'eco',c:'#16a34a'}]},
+  ],
+  allProjects:[
+    {name:'Explorer Robot',dates:'In progress',cat:'Robotics',skills:[{n:'Arduino programming',x:0},{n:'Sensors',x:0},{n:'Mechanical design',x:0}],xp:'In progress'},
+    {name:'Weather Station',dates:'15 Jan – 12 Feb 2025',cat:'Electronics',skills:[{n:'Sensors & Arduino',x:120},{n:'Data analysis',x:100},{n:'Teamwork',x:100}],xp:320},
+    {name:'Scratch Video Game',dates:'3 Nov – 28 Nov 2024',cat:'Programming',skills:[{n:'Programming logic',x:130},{n:'Character design',x:80},{n:'Creative writing',x:70}],xp:280},
+    {name:'Spaghetti Bridge',dates:'5 Oct – 25 Oct 2024',cat:'Engineering',skills:[{n:'Material strength',x:90},{n:'Cooperative work',x:70},{n:'Prototyping',x:40}],xp:200},
+    {name:'Recycling App',dates:'10 Sep – 2 Oct 2024',cat:'Programming',skills:[{n:'App design',x:110},{n:'Sustainability',x:80},{n:'UX Design',x:60}],xp:250},
+    {name:'Virtual Planetarium',dates:'5 Jun – 28 Jun 2024',cat:'Science',skills:[{n:'Astronomy',x:100},{n:'Oral presentation',x:80},{n:'Research',x:70}],xp:250},
+    {name:'Air Cannon',dates:'3 May – 24 May 2024',cat:'Physics',skills:[{n:'Aerodynamics',x:90},{n:'Maths',x:80},{n:'Experimentation',x:60}],xp:230},
+    {name:'3D Keyring',dates:'1 Apr – 19 Apr 2024',cat:'3D Design',skills:[{n:'3D Modelling',x:120},{n:'3D Printing',x:80},{n:'Creativity',x:50}],xp:250},
+    {name:'Smart Home',dates:'5 Mar – 28 Mar 2024',cat:'IoT',skills:[{n:'Electronics',x:110},{n:'Automation',x:90},{n:'Programming',x:80}],xp:280},
+    {name:'AI Music Generator',dates:'2 Feb – 22 Feb 2024',cat:'AI',skills:[{n:'Machine Learning',x:130},{n:'Music',x:100},{n:'Python',x:90}],xp:320},
+    {name:'Water Monitor',dates:'10 Jan – 30 Jan 2024',cat:'Science',skills:[{n:'Chemistry',x:80},{n:'Sensors',x:90},{n:'Data',x:70}],xp:240},
+    {name:'Autonomous Car',dates:'5 Dec – 20 Dec 2023',cat:'Robotics',skills:[{n:'PID Control',x:120},{n:'Computer vision',x:100},{n:'Electronics',x:80}],xp:300},
+    {name:'Robotic Arm',dates:'1 Nov – 25 Nov 2023',cat:'Robotics',skills:[{n:'Servomotors',x:110},{n:'Programming',x:100},{n:'Design',x:70}],xp:280},
+    {name:'Homemade AM Radio',dates:'5 Oct – 28 Oct 2023',cat:'Electronics',skills:[{n:'Waves',x:90},{n:'Circuits',x:100},{n:'Soldering',x:60}],xp:250},
+  ],
+  allActitudes:[
+    {pos:true,name:'Helped a classmate',date:'14 May 2025',xp:'+20 XP'},
+    {pos:true,name:'Exceptional participation',date:'12 May 2025',xp:'+30 XP'},
+    {pos:false,name:'Arrived late to class',date:'8 May 2025',xp:'-10 XP'},
+    {pos:true,name:'Outstanding creative idea',date:'5 May 2025',xp:'+25 XP'},
+    {pos:true,name:'Team leadership',date:'2 May 2025',xp:'+20 XP'},
+    {pos:false,name:'Task not submitted on time',date:'28 Apr 2025',xp:'-15 XP'},
+    {pos:true,name:'Best project of the week',date:'25 Apr 2025',xp:'+50 XP'},
+    {pos:true,name:'Documented their project',date:'22 Apr 2025',xp:'+15 XP'},
+    {pos:true,name:'Presented work to the group',date:'18 Apr 2025',xp:'+20 XP'},
+    {pos:false,name:'Interrupted the class',date:'14 Apr 2025',xp:'-10 XP'},
+    {pos:true,name:'Solved a team challenge',date:'10 Apr 2025',xp:'+25 XP'},
+    {pos:true,name:'Helped tidy the classroom',date:'5 Apr 2025',xp:'+15 XP'},
+  ],
+  frases:[
+    {id:'ignite',text:"Let's Ignite!",minLevel:1,icon:'⚡'},
+    {id:'aprendo',text:'I learn a little more every day',minLevel:1,icon:'📚'},
+    {id:'error',text:'Mistakes help me grow',minLevel:1,icon:'🌱'},
+    {id:'crear',text:'Creating is my superpower',minLevel:2,icon:'✨'},
+    {id:'curioso',text:'Curiosity has no limits',minLevel:2,icon:'🔭'},
+    {id:'equipo',text:'Together we go further',minLevel:3,icon:'🤝'},
+    {id:'pregunta',text:'Every question opens a door',minLevel:3,icon:'🚪'},
+    {id:'reto',text:'Challenges are opportunities',minLevel:4,icon:'🏆'},
+    {id:'codigo',text:'Code is my language',minLevel:4,icon:'💻'},
+    {id:'persiste',text:'Persistence is the key',minLevel:5,icon:'🔑'},
+    {id:'imagine',text:'Imagine, design, build',minLevel:5,icon:'🛠️'},
+    {id:'impacto',text:'I want to change the world',minLevel:6,icon:'🌍'},
+    {id:'robot',text:'I will master robotics',minLevel:6,icon:'🤖'},
+    {id:'datos',text:'Data tells stories',minLevel:7,icon:'📊'},
+    {id:'conecto',text:'I connect ideas to innovate',minLevel:7,icon:'💡'},
+    {id:'heroe',text:'I am the hero of my learning',minLevel:8,icon:'⚔️'},
+    {id:'future',text:'I build the future today',minLevel:9,icon:'🚀'},
+    {id:'legend',text:'I will be a coding legend',minLevel:10,icon:'🌟'},
+  ],
+  boltTaglines:{sparkle:'The original · pure energy',ferri:'Speed · power · passion',apfel:'Design · simplicity · magic',teslo:'Electric · future · silent',galaxi:'Infinite · cosmos · innovation',nextra:'Just do it · no limits',goog:'Curiosity · colours · knowledge',spotif:'Rhythm · green · music',amazo:'Everything · fast · for you',netti:'Drama · epic · action'},
+  mascotDescs:{spark:'Friendly ball · the starter',ember:'Flame · fire spirit',pixel:'Robot · the friendly hacker',bolt:'Lightning · pure speed',nova:'Planet · cosmic energy',sage:'Sprout · forest wisdom'},
+  mascotTipos:{spark:'Normal Type',ember:'Fire Type',pixel:'Tech Type',bolt:'Lightning Type',nova:'Cosmos Type',sage:'Earth Type'},
+  accNames:{none:'None',gafas:'Glasses',gasol:'Sunglasses',sombrero:'Top hat',gorra:'Cap',corona:'Crown',antenas:'Antennas',halo:'Halo',bowtie:'Bow tie',mochila:'Backpack',capa:'Cape'},
+  colorNames:{normal:'Normal',fuego:'Fire',tecnico:'Tech',rayo:'Lightning',cosmos:'Cosmos',agua:'Water',hada:'Fairy',tierra:'Earth'},
+  famEspacio:'Family space',
+  famSchool:'CEIP San Pablo, Madrid',
+  famGroups:'Makers 5A · Advanced Robotics',
+  famSealText: name => 'WELCOME TO THE UNIVERSE OF ' + name.toUpperCase() + ' · IGNITE NEXUS · ',
+  famHero1:'Look at everything', famHeroVerb:'they\'ve', famHero2:'created.',
+  famHeroLede: name => 'A journey through the projects, ideas and small great moments of ' + name + ' at Ignite.',
+  famScrollCue:'Scroll',
+  famSec01Eyebrow:'Right now',
+  famSec01T1:'In the middle of something', famSec01T2:'big.',
+  famSec01Lede:'This is what they\'re working on this season — and everything they practise along the way.',
+  famSec02Eyebrow:'Exploring',
+  famSec02T1:'Six territories.', famSec02T3:'One', famSec02T2:'curious mind.',
+  famSec02Lede:'Each project trains several skills, grouped into STEAM competencies and transferable skills. The bar shows progress: it rises fast at first and takes more effort as it advances. Tap an area to see which skills they\'ve developed.',
+  famSec03Eyebrow:'The collection',
+  famSec03T1:'Things made with their hands', famSec03T2:'(and their brain).',
+  famSec03Lede:'Keep scrolling: the collection moves sideways. These are the latest four.',
+  famHorizHint:'Scroll to advance',
+  famSec04Eyebrow:'In class',
+  famSec04T1:'Moments worth', famSec04T2:'framing.',
+  famSec04Lede:'Small notes the teachers collect class by class: achievements, gestures and the occasional friendly reminder.',
+  famVerMomentos:'View all moments',
+  famEnCurso:'In progress',
+  famLoQuePractica:'What they practise', famLoQueAprendio:'What they learned',
+  famVerTodos:'View all', famVerLoQueAprendio:'See what they learned',
+  famProgreso:'Progress', famHabilidades:'skills',
+  famClose1: name => 'Thank you for following ' + name + '\'s journey. Every project adds to the',
+  famCloseEm:'person', famClose2:'they\'re becoming.',
+  famCloseSign:'The Ignite team',
+  famCloseSub:'Want to discuss their progress? Talk to the teacher at the next session.',
+  famAllTitle:'Everything they\'ve created.',
+  famAllSub: name => 'The complete project collection of ' + name + '. Open any card to see what they learned.',
+  famAllOverlayTitle:'Full collection',
+  famMomTitle:'Moments worth framing.',
+  famMomOverlayTitle:'Classroom moments',
+  famMomSub:'Everything the teachers have collected class by class.',
+  famFooter: name => '· Family space of ' + name + ' · School year 2024–25',
+  famMoments:[
+    {date:'14 May 2025',type:'good',cat:'Teamwork',name:'Helped a classmate',text:'Lent a hand to a classmate who was stuck.'},
+    {date:'12 May 2025',type:'good',cat:'Participation',name:'Exceptional participation',text:'Joined in enthusiastically and contributed ideas to the group.'},
+    {date:'8 May 2025',type:'note',cat:'Punctuality',name:'Arrived a bit late',text:'Arrived slightly late this time. A gentle reminder.'},
+    {date:'5 May 2025',type:'good',cat:'Creativity',name:'Outstanding creative idea',text:'Surprised everyone with an original idea to solve the challenge.'},
+    {date:'2 May 2025',type:'good',cat:'Leadership',name:'Group leadership',text:'Took the initiative and organised the group.'},
+    {date:'28 Apr 2025',type:'note',cat:'Tasks',name:'An unfinished task',text:'Did not finish the task in time. Will pick it back up calmly.'},
+    {date:'25 Apr 2025',type:'good',cat:'Project',name:'Best project of the week',text:'Their project was chosen the best of the week.'},
+    {date:'22 Apr 2025',type:'good',cat:'Consistency',name:'Documented the project',text:'Took time to document the project in detail.'},
+  ],
+},
+// ══════════════════════════════════════════════════════════════════
+CAT: {
+  nivel:'Nivell', alumno:'Alumne', familia:'Família',
+  modoClasico:'Mode Clàssic', eligeTuMundo:'🎨 Tria el teu món',
+  volverInicio:'← Tornar a l\'inici', volver:'Tornar',
+  anterior:'Anterior', siguiente:'Següent',
+  todasMisiones:'Totes les missions',
+  verTodasMisiones:'Veure totes les missions →',
+  verTodasAcciones:'Veure totes les accions →',
+  misionActiva:'Missió activa', miGalaxia:'La meva Galàxia de Poders',
+  archivoMisiones:'Arxiu de missions', actitud:'Actitud',
+  proximamente:'Pròximament disponible.',
+  vistaFamilia:'Vista de família',
+  xpLeft: n => 'Nivell ' + n,
+  xpRight: (xp,next) => xp + ' XP per al Nivell ' + next,
+  levelNames:['','Explorador','Constructor','Inventor','Maker','Innovador','Creador','Heroi Digital','Mestre','Visionari','Llegenda'],
+  paletteNames:{amarillo:'Clàssic',caramelo:'Desert',bosque:'Bosc',oceano:'Oceà',nieve:'Neu',crepusculo:'Crepuscle',neon:'Neó',cosmos:'Cosmos'},
+  palettePrefixes:{amarillo:'Mode Clàssic',caramelo:'Mode Desert',bosque:'Mode Bosc',oceano:'Mode Oceà',nieve:'Mode Neu',crepusculo:'Mode Crepuscle',neon:'Mode Neó',cosmos:'Mode Cosmos'},
+  paletteSub:{amarillo:'Turons al sol',caramelo:'Dunes al capvespre',bosque:'Muntanyes i pins',oceano:'Costa i onades',nieve:'Cims gelats',crepusculo:'Capvespre màgic',neon:'Ciutat del futur',cosmos:'Planetes i estrelles'},
+  paletteModalTitle:'🎨 Tria el teu món',
+  personalizaPersonaje:'Personalitza el teu personatge',
+  tabPersonaje:'Personatge', tabColor:'Tipus', tabAcc:'Accessoris',
+  mascotSubShape:'Tria el teu personatge. Cadascun té el seu propi tipus base.',
+  mascotSubColor:'Canvia el tipus del teu personatge. En desbloqueja més en pujar de nivell.',
+  mascotSubAcc:'Posa un accessori al teu personatge. En desbloqueja més en pujar de nivell.',
+  eligeRayo:'Tria el teu llamp',
+  eligeRayoSub:'Cada llamp té el seu estil. En desbloqueja més en pujar de nivell.',
+  eligeLema:'Tria el teu lema',
+  eligeLemaSub:'Toca una frase perquè aparegui al teu globus. En desbloqueja més en pujar de nivell.',
+  gxNiveles:'Nivells', gxRadar:'Radar', gxDespegues:'Enlairaments',
+  gxTitle:'La meva Galàxia de Poders', gxKicker:'Ignite Nexus · El meu progrés',
+  gxXP:'XP total', gxPoderes:'poders', gxMasFuerte:'més fort',
+  gxReplay:'Enlairar', gxAmpliar:'Ampliar',
+  gxVerPoderes: n => 'Veure ' + n + ' poders',
+  gxTop:'Top',
+  actitudModalTitle:'Registre d\'actitud',
+  actitudModalHead:'Totes les accions.',
+  actitudModalSub:'El registre complet d\'actitud — positiva i negativa.',
+  lockedAlert: (name, lv) => '🔒 Desbloqueja «' + name + '» al Nivell ' + lv + '. Segueix sumant XP!',
+  enCurso:'En curs',
+  recompensaMaxima:'Recompensa màxima',
+  poderesQueEntrena:'Poders que entrena',
+  verTodasPag:'Veure totes les missions →',
+  fechaFormato: d => d,
+  ramasTitles:{Science:'Explorador',Technology:'Constructor',Engineering:'Maker',Art:'Creador',Maths:'Solucionador',Transversals:'Líder'},
+  skillDescs:{
+    'Física':'Descobreix com es mouen les coses: forces, energia i moviment.',
+    'Química':'Barreja, reacciona i entén de què està fet tot.',
+    'Biología':'Explora els éssers vius, des de les cèl·lules fins als ecosistemes.',
+    'Método científico':'Observa, planteja hipòtesis i comprova-les amb experiments.',
+    'Arduino & Hardware':'Connecta sensors i plaques per donar vida als teus invents.',
+    'Python':'Programa amb un dels llenguatges més usats del món.',
+    'IA & Datos':'Ensenya les màquines a aprendre a partir de dades.',
+    'Machine Learning':'Crea models que reconeixen patrons i fan prediccions.',
+    'Apps & Web':'Dissenya i construeix aplicacions i pàgines web.',
+    'Bases de datos':'Guarda i organitza la informació de manera eficient.',
+    'IoT':'Connecta objectes quotidians a internet.',
+    'Robótica software':'Programa el cervell que mou els robots.',
+    'Electrónica digital':'Entén circuits, senyals i lògica digital.',
+    'Ciberseguridad':'Protegeix sistemes i dades davant dels atacs.',
+    'Redes':'Connecta ordinadors perquè puguin comunicar-se.',
+    'Cloud':'Utilitza servidors al núvol per als teus projectes.',
+    'Diseño mecánico':'Idea peces i mecanismes que funcionen de debò.',
+    'Prototipado':'Construeix versions de prova per millorar les teves idees.',
+    'Estructuras':'Dissenya construccions fermes i resistents.',
+    'CAD':'Dibuixa els teus dissenys en 3D amb l\'ordinador.',
+    'Modelado 3D':'Esculpeix objectes i personatges en tres dimensions.',
+    'Diseño visual':'Combina color, forma i composició amb estil.',
+    'Ilustración':'Dóna vida a les teves idees dibuixant.',
+    'Música':'Crea els teus propis ritmes i melodies.',
+    'Geometría':'Juga amb figures, angles i l\'espai.',
+    'Álgebra':'Resol enigmes usant lletres i números.',
+    'Lógica':'Raona pas a pas per resoldre problemes.',
+    'Estadística':'Recull dades i descobreix què ens expliquen.',
+    'Trabajo en equipo':'Col·labora i suma forces amb els altres.',
+    'Comunicación':'Expressa les teves idees amb claredat i seguretat.',
+    'Liderazgo':'Guia i inspira el teu grup cap a una meta.',
+    'Gestión del tiempo':'Organitza les teves tasques i compleix els terminis.',
+    'Creatividad':'Troba idees noves i originals.',
+  },
+  archiveMissions:[
+    {name:'Estació Meteorològica',cat:'Electrònica',dates:'15 gen – 12 feb 2025',xp:320,desc:'Va construir una estació amb sensors reals que mesura temperatura i humitat. Va aprendre a connectar components, recollir dades i treballar en equip per presentar els resultats.',skills:[{n:'Sensors & Arduino',xp:120,rama:'Technology'},{n:'Anàlisi de dades',xp:100,rama:'Science'},{n:'Treball en equip',xp:100,rama:'Transversals'}]},
+    {name:'Videojoc a Scratch',cat:'Programació',dates:'3 nov – 28 nov 2024',xp:280,desc:'Va dissenyar i programar el seu propi videojoc de principi a fi: va inventar els personatges, va escriure les regles i el va publicar perquè els seus companys poguessin jugar-hi.',skills:[{n:'Lògica de programació',xp:130,rama:'Technology'},{n:'Disseny de personatges',xp:80,rama:'Art'},{n:'Creativitat narrativa',xp:70,rama:'Transversals'}]},
+    {name:'Pont d\'Espaguetis',cat:'Enginyeria',dates:'5 oct – 25 oct 2024',xp:200,desc:'En equip va dissenyar i construir un pont usant només espaguetis i cinta adhesiva. El van posar a prova carregant pes fins al límit i van analitzar per què va aguantar o va fallar.',skills:[{n:'Resistència materials',xp:90,rama:'Engineering'},{n:'Treball cooperatiu',xp:70,rama:'Transversals'},{n:'Prototipatge',xp:40,rama:'Engineering'}]},
+    {name:'App de Reciclatge',cat:'Programació',dates:'10 set – 2 oct 2024',xp:250,desc:'Va idear i prototipar una app per motivar a reciclar a casa. Va dissenyar l\'experiència d\'usuari i va demostrar que la tecnologia pot ajudar el medi ambient.',skills:[{n:'Disseny d\'apps',xp:110,rama:'Technology'},{n:'Sostenibilitat',xp:80,rama:'Science'},{n:'UX Design',xp:60,rama:'Art'}]},
+    {name:'Planetari Virtual',cat:'Ciència',dates:'5 jun – 28 jun 2024',xp:210,desc:'Va recrear el sistema solar en un planetari interactiu i el va presentar a tota la classe. Va investigar dades reals de la NASA i va aprendre a comunicar ciència de forma visual i amena.',skills:[{n:'Astronomia',xp:90,rama:'Science'},{n:'Presentació oral',xp:70,rama:'Transversals'},{n:'Investigació',xp:50,rama:'Science'}]},
+    {name:'Casa Domòtica',cat:'IoT',dates:'5 mar – 28 mar 2024',xp:230,desc:'Va construir una maqueta de casa intel·ligent amb llums automàtiques i sensors de moviment. Va programar els comportaments i va explicar com la domòtica fa la vida més còmoda.',skills:[{n:'Electrònica',xp:100,rama:'Technology'},{n:'Automatització',xp:80,rama:'Engineering'},{n:'Programació',xp:50,rama:'Technology'}]},
+    {name:'Canó d\'Aire',cat:'Física',dates:'3 mai – 24 mai 2024',xp:180,desc:'Va construir un canó casolà que llança anells d\'aire i va usar l\'experiment per entendre com es comporten els fluids. Va mesurar distàncies i va treure les seves pròpies conclusions.',skills:[{n:'Aerodinàmica',xp:80,rama:'Science'},{n:'Matemàtiques',xp:60,rama:'Maths'},{n:'Experimentació',xp:40,rama:'Science'}]},
+    {name:'Clauer 3D',cat:'Disseny 3D',dates:'1 abr – 19 abr 2024',xp:160,desc:'Va dissenyar el seu propi clauer personalitzat des de zero en programari 3D i el va imprimir. Va passar d\'una idea en paper a un objecte físic que es pot tocar.',skills:[{n:'Modelat 3D',xp:90,rama:'Art'},{n:'Impressió 3D',xp:40,rama:'Engineering'},{n:'Creativitat',xp:30,rama:'Art'}]},
+  ],
+  activeMissions:[
+    {name:'Robot Explorador',cat:'Robòtica',illus:'robotica',target:'500',skills:[{n:'Programació',i:'prog',c:'#3E6FA8'},{n:'Electrònica',i:'elec',c:'#FBB03B'},{n:'Disseny mecànic',i:'mech',c:'#2596BE'},{n:'Resolució',i:'idea',c:'#7CB8F5'}]},
+    {name:'Ciutat del Futur 3D',cat:'Disseny 3D',illus:'diseno3d',target:'420',skills:[{n:'Modelat 3D',i:'cube',c:'#3E6FA8'},{n:'Creativitat',i:'create',c:'#FBB03B'},{n:'Sostenibilitat',i:'eco',c:'#16a34a'}]},
+  ],
+  allProjects:[
+    {name:'Robot Explorador',dates:'En curs',cat:'Robòtica',skills:[{n:'Programació Arduino',x:0},{n:'Sensors',x:0},{n:'Disseny mecànic',x:0}],xp:'En curs'},
+    {name:'Estació Meteorològica',dates:'15 gen – 12 feb 2025',cat:'Electrònica',skills:[{n:'Sensors & Arduino',x:120},{n:'Anàlisi de dades',x:100},{n:'Treball en equip',x:100}],xp:320},
+    {name:'Videojoc a Scratch',dates:'3 nov – 28 nov 2024',cat:'Programació',skills:[{n:'Lògica de programació',x:130},{n:'Disseny de personatges',x:80},{n:'Creativitat narrativa',x:70}],xp:280},
+    {name:'Pont d\'Espaguetis',dates:'5 oct – 25 oct 2024',cat:'Enginyeria',skills:[{n:'Resistència de materials',x:90},{n:'Treball cooperatiu',x:70},{n:'Prototipatge',x:40}],xp:200},
+    {name:'App de Reciclatge',dates:'10 set – 2 oct 2024',cat:'Programació',skills:[{n:'Disseny d\'apps',x:110},{n:'Sostenibilitat',x:80},{n:'UX Design',x:60}],xp:250},
+    {name:'Planetari Virtual',dates:'5 jun – 28 jun 2024',cat:'Ciència',skills:[{n:'Astronomia',x:100},{n:'Presentació oral',x:80},{n:'Investigació',x:70}],xp:250},
+    {name:'Canó d\'Aire',dates:'3 mai – 24 mai 2024',cat:'Física',skills:[{n:'Aerodinàmica',x:90},{n:'Matemàtiques',x:80},{n:'Experimentació',x:60}],xp:230},
+    {name:'Clauer 3D',dates:'1 abr – 19 abr 2024',cat:'Disseny 3D',skills:[{n:'Modelat 3D',x:120},{n:'Impressió 3D',x:80},{n:'Creativitat',x:50}],xp:250},
+    {name:'Casa Domòtica',dates:'5 mar – 28 mar 2024',cat:'IoT',skills:[{n:'Electrònica',x:110},{n:'Automatització',x:90},{n:'Programació',x:80}],xp:280},
+    {name:'Generador Musical IA',dates:'2 feb – 22 feb 2024',cat:'IA',skills:[{n:'Machine Learning',x:130},{n:'Música',x:100},{n:'Python',x:90}],xp:320},
+    {name:'Monitor d\'Aigua',dates:'10 gen – 30 gen 2024',cat:'Ciència',skills:[{n:'Química',x:80},{n:'Sensors',x:90},{n:'Dades',x:70}],xp:240},
+    {name:'Cotxe Autònom',dates:'5 des – 20 des 2023',cat:'Robòtica',skills:[{n:'Control PID',x:120},{n:'Visió artificial',x:100},{n:'Electrònica',x:80}],xp:300},
+    {name:'Braç Robòtic',dates:'1 nov – 25 nov 2023',cat:'Robòtica',skills:[{n:'Servomotors',x:110},{n:'Programació',x:100},{n:'Disseny',x:70}],xp:280},
+    {name:'Ràdio AM Casolana',dates:'5 oct – 28 oct 2023',cat:'Electrònica',skills:[{n:'Ones',x:90},{n:'Circuits',x:100},{n:'Soldadura',x:60}],xp:250},
+  ],
+  allActitudes:[
+    {pos:true,name:'Va ajudar un company',date:'14 mai 2025',xp:'+20 XP'},
+    {pos:true,name:'Participació excepcional',date:'12 mai 2025',xp:'+30 XP'},
+    {pos:false,name:'Va arribar tard a classe',date:'8 mai 2025',xp:'-10 XP'},
+    {pos:true,name:'Idea creativa destacada',date:'5 mai 2025',xp:'+25 XP'},
+    {pos:true,name:'Lideratge al grup',date:'2 mai 2025',xp:'+20 XP'},
+    {pos:false,name:'No va entregar la tasca a temps',date:'28 abr 2025',xp:'-15 XP'},
+    {pos:true,name:'Millor projecte de la setmana',date:'25 abr 2025',xp:'+50 XP'},
+    {pos:true,name:'Va documentar el seu projecte',date:'22 abr 2025',xp:'+15 XP'},
+    {pos:true,name:'Va presentar la feina al grup',date:'18 abr 2025',xp:'+20 XP'},
+    {pos:false,name:'Va interrompre la classe',date:'14 abr 2025',xp:'-10 XP'},
+    {pos:true,name:'Va resoldre un repte en equip',date:'10 abr 2025',xp:'+25 XP'},
+    {pos:true,name:'Va ajudar a endreçar l\'espai',date:'5 abr 2025',xp:'+15 XP'},
+  ],
+  frases:[
+    {id:'ignite',text:"Anem a Ignite!",minLevel:1,icon:'⚡'},
+    {id:'aprendo',text:'Aprenc una mica més cada dia',minLevel:1,icon:'📚'},
+    {id:'error',text:'Els errors em fan créixer',minLevel:1,icon:'🌱'},
+    {id:'crear',text:'Crear és el meu superpoders',minLevel:2,icon:'✨'},
+    {id:'curioso',text:'La curiositat no té límits',minLevel:2,icon:'🔭'},
+    {id:'equipo',text:'Junts arribem més lluny',minLevel:3,icon:'🤝'},
+    {id:'pregunta',text:'Cada pregunta obre una porta',minLevel:3,icon:'🚪'},
+    {id:'reto',text:'Els reptes són oportunitats',minLevel:4,icon:'🏆'},
+    {id:'codigo',text:'El codi és el meu idioma',minLevel:4,icon:'💻'},
+    {id:'persiste',text:'Persistir és la clau',minLevel:5,icon:'🔑'},
+    {id:'imagine',text:'Imagina, dissenya, construeix',minLevel:5,icon:'🛠️'},
+    {id:'impacto',text:'Vull canviar el món',minLevel:6,icon:'🌍'},
+    {id:'robot',text:'Dominaré la robòtica',minLevel:6,icon:'🤖'},
+    {id:'datos',text:'Les dades expliquen històries',minLevel:7,icon:'📊'},
+    {id:'conecto',text:'Connecto idees per innovar',minLevel:7,icon:'💡'},
+    {id:'heroe',text:'Soc l\'heroi del meu aprenentatge',minLevel:8,icon:'⚔️'},
+    {id:'future',text:'El futur el construeixo avui',minLevel:9,icon:'🚀'},
+    {id:'legend',text:'Seré una llegenda del codi',minLevel:10,icon:'🌟'},
+  ],
+  boltTaglines:{sparkle:'L\'original · energia pura',ferri:'Velocitat · potència · passió',apfel:'Disseny · simplicitat · màgia',teslo:'Elèctric · futur · silenciós',galaxi:'Infinit · cosmos · innovació',nextra:'Just do it · sense límits',goog:'Curiositat · colors · saber',spotif:'Ritme · verd · música',amazo:'Tot · ràpid · per a tu',netti:'Drama · èpica · acció'},
+  mascotDescs:{spark:'Boleta amigable · l\'inicial',ember:'Flama · esperit de foc',pixel:'Robot · el hacker amigable',bolt:'Llamp · velocitat pura',nova:'Planeta · energia còsmica',sage:'Brot · saviesa del bosc'},
+  mascotTipos:{spark:'Tipus Normal',ember:'Tipus Foc',pixel:'Tipus Tècnic',bolt:'Tipus Llamp',nova:'Tipus Cosmos',sage:'Tipus Terra'},
+  accNames:{none:'Cap',gafas:'Ulleres',gasol:'Ulleres de sol',sombrero:'Barret de copa',gorra:'Gorra',corona:'Corona',antenas:'Antenes',halo:'Halo',bowtie:'Llacet',mochila:'Motxilla',capa:'Capa'},
+  colorNames:{normal:'Normal',fuego:'Foc',tecnico:'Tècnic',rayo:'Llamp',cosmos:'Cosmos',agua:'Aigua',hada:'Fada',tierra:'Terra'},
+  famEspacio:'Espai de la família',
+  famSchool:'CEIP San Pablo, Madrid',
+  famGroups:'Makers 5A · Robòtica Avançada',
+  famSealText: name => 'BENVINGUT A L\'UNIVERS DE ' + name.toUpperCase() + ' · IGNITE NEXUS · ',
+  famHero1:'Mira tot el que ha', famHeroVerb:'', famHero2:'creat.',
+  famHeroLede: name => 'Un recorregut pels projectes, les idees i els petits grans moments de ' + name + ' a Ignite.',
+  famScrollCue:'Llisca',
+  famSec01Eyebrow:'Ara mateix',
+  famSec01T1:'Està enmig d\'alguna cosa', famSec01T2:'gran.',
+  famSec01Lede:'Això és el que té entre mans aquesta temporada — i tot el que practica pel camí.',
+  famSec02Eyebrow:'El que explora',
+  famSec02T1:'Sis territoris.', famSec02T3:'Una ment', famSec02T2:'inquieta.',
+  famSec02Lede:'Cada projecte entrena diverses habilitats, agrupades en les competències STEAM i les habilitats transversals. La barra reflecteix el progrés: puja ràpid al principi i costa més a mesura que avança. Toca una àrea per veure quines habilitats ha desenvolupat.',
+  famSec03Eyebrow:'La seva col·lecció',
+  famSec03T1:'Coses que ha fet amb les seves mans', famSec03T2:'(i el seu cap).',
+  famSec03Lede:'Segueix baixant: la col·lecció avança de costat. Aquests són els quatre últims.',
+  famHorizHint:'Baixa per avançar',
+  famSec04Eyebrow:'A l\'aula',
+  famSec04T1:'Moments que mereixen un', famSec04T2:'marc.',
+  famSec04Lede:'Petites notes que el professorat recull classe a classe: assoliments, gestos i algun recordatori amable.',
+  famVerMomentos:'Veure tots els moments',
+  famEnCurso:'En curs',
+  famLoQuePractica:'El que practica', famLoQueAprendio:'El que va aprendre',
+  famVerTodos:'Veure\'ls tots', famVerLoQueAprendio:'Veure el que va aprendre',
+  famProgreso:'Progrés', famHabilidades:'habilitats',
+  famClose1: name => 'Gràcies per acompanyar ' + name + '. Cada projecte suma a la',
+  famCloseEm:'persona', famClose2:'que està construint.',
+  famCloseSign:'L\'equip d\'Ignite',
+  famCloseSub:'Vols comentar el seu progrés? Parla amb el professorat a la propera sessió.',
+  famAllTitle:'Tot el que ha creat.',
+  famAllSub: name => 'La col·lecció completa de projectes de ' + name + '. Obre qualsevol per veure el que va aprendre.',
+  famAllOverlayTitle:'Tota la col·lecció',
+  famMomTitle:'Moments que mereixen un marc.',
+  famMomOverlayTitle:'Moments a l\'aula',
+  famMomSub:'Tot el que el professorat ha recollit classe a classe.',
+  famFooter: name => '· Espai de la família de ' + name + ' · Curs 2024–25',
+  famMoments:[
+    {date:'14 mai 2025',type:'good',cat:'Companyonia',name:'Va ajudar un company',text:'Va donar un cop de mà a un company que s\'havia encallat.'},
+    {date:'12 mai 2025',type:'good',cat:'Participació',name:'Participació excepcional',text:'Va participar amb moltes ganes i va aportar idees a l\'equip.'},
+    {date:'8 mai 2025',type:'note',cat:'Puntualitat',name:'Va arribar una mica tard',text:'Aquesta vegada va arribar una mica tard. Un petit recordatori.'},
+    {date:'5 mai 2025',type:'good',cat:'Creativitat',name:'Idea creativa destacada',text:'Va sorprendre amb una idea original per resoldre el repte.'},
+    {date:'2 mai 2025',type:'good',cat:'Lideratge',name:'Lideratge al grup',text:'Va prendre la iniciativa i va organitzar el seu grup.'},
+    {date:'28 abr 2025',type:'note',cat:'Tasques',name:'Una tasca sense acabar',text:'No va arribar a acabar la tasca. La reprendrà amb tranquil·litat.'},
+    {date:'25 abr 2025',type:'good',cat:'Projecte',name:'Millor projecte de la setmana',text:'El seu projecte va ser escollit el millor de la setmana.'},
+    {date:'22 abr 2025',type:'good',cat:'Constància',name:'Va documentar el seu projecte',text:'Va dedicar temps a documentar el seu projecte amb detall.'},
+  ],
+},
+};
+
+// ── Active lang state ─────────────────────────────────────────
+let _currentLang = 'ESP';
+
+// ── Getters for data arrays (always returns current lang) ──────
+function getLangData() { return I18N[_currentLang] || I18N.ESP; }
+
+// ── Core apply function ───────────────────────────────────────
+function applyI18n(code) {
+  const t = I18N[code]; if (!t) return;
+  const name = (() => { const el = document.querySelector('.profile-name'); return el ? el.textContent : 'Álvaro López'; })();
+  const firstName = name.split(' ')[0];
+
+  // ── Static data-i18n attrs ─────────────────────────────────
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (t[k] !== undefined && typeof t[k] === 'string') el.textContent = t[k];
+  });
+
+  // ── Profile ────────────────────────────────────────────────
+  document.querySelectorAll('[data-i18n-xpleft]').forEach(el => el.textContent = t.xpLeft(currentLevel));
+  document.querySelectorAll('[data-i18n-xpright]').forEach(el => el.textContent = t.xpRight('360', currentLevel + 1));
+  const lne = document.getElementById('level-name-el');
+  if (lne) lne.textContent = t.levelNames[currentLevel] || '';
+
+  // ── Palette mode label + palette modal ─────────────────────
+  const pml = document.getElementById('palette-mode-label');
+  if (pml) { const pal = document.body.getAttribute('data-theme') || 'amarillo'; pml.textContent = t.palettePrefixes[pal] || t.modoClasico; }
+  const pmTitle = document.querySelector('.palette-modal-title');
+  if (pmTitle) pmTitle.textContent = t.paletteModalTitle;
+  document.querySelectorAll('.palette-option').forEach(opt => {
+    const pal = opt.getAttribute('data-pal'); const meta = opt.querySelector('.palette-meta'); if (!meta || !pal) return;
+    const kids = [...meta.childNodes]; const textNode = kids.find(n => n.nodeType === 3 && n.textContent.trim());
+    if (textNode && t.paletteNames[pal]) textNode.textContent = t.paletteNames[pal];
+    const sm = meta.querySelector('small'); if (sm && t.paletteSub[pal]) sm.textContent = t.paletteSub[pal];
+  });
+
+  // ── Modals ─────────────────────────────────────────────────
+  const setModalText = (sel, txt) => { const el = document.querySelector(sel); if (el) { const svg = el.querySelector('svg'); if (svg) { el.innerHTML = ''; el.appendChild(svg); el.append(' ' + txt); } else el.textContent = txt; } };
+  setModalText('.bolt-modal-title', t.eligeRayo);
+  const bms = document.querySelector('.bolt-modal-sub'); if (bms) bms.textContent = t.eligeRayoSub;
+  setModalText('.frase-modal-title', t.eligeLema);
+  const fms = document.querySelector('.frase-modal-sub'); if (fms) fms.textContent = t.eligeLemaSub;
+  const mmt = document.querySelector('.mascot-modal-title'); if (mmt) mmt.textContent = t.personalizaPersonaje;
+  const mmss = document.querySelector('.mascot-modal-sub'); if (mmss) mmss.textContent = t.mascotSubShape;
+  const ps = document.querySelector('#panel-color .mascot-modal-sub'); if (ps) ps.textContent = t.mascotSubColor;
+  const pa = document.querySelector('#panel-acc .mascot-modal-sub'); if (pa) pa.textContent = t.mascotSubAcc;
+  const tabp = document.getElementById('tab-personaje'); if (tabp) { const svg = tabp.querySelector('svg'); tabp.textContent = t.tabPersonaje; if (svg) tabp.insertBefore(svg, tabp.firstChild); }
+  const tabc = document.getElementById('tab-color'); if (tabc) { const svg = tabc.querySelector('svg'); tabc.textContent = t.tabColor; if (svg) tabc.insertBefore(svg, tabc.firstChild); }
+  const taba = document.getElementById('tab-acc'); if (taba) { const svg = taba.querySelector('svg'); taba.textContent = t.tabAcc; if (svg) taba.insertBefore(svg, taba.firstChild); }
+
+  // ── Galaxia tabs ───────────────────────────────────────────
+  const gxMap = { niveles: t.gxNiveles, radar: t.gxRadar, despegues: t.gxDespegues };
+  document.querySelectorAll('.gx-tab[data-v]').forEach(tab => {
+    const v = tab.getAttribute('data-v'); if (!gxMap[v]) return;
+    const svg = tab.querySelector('svg'); tab.textContent = gxMap[v]; if (svg) tab.insertBefore(svg, tab.firstChild);
+  });
+  const gxt = document.querySelector('.gx-t'); if (gxt) gxt.textContent = t.gxTitle;
+  const gxk = document.querySelector('.gx-k'); if (gxk) gxk.textContent = t.gxKicker;
+
+  // ── Actitud modal ──────────────────────────────────────────
+  const amt = document.querySelector('.actitud-modal-title'); if (amt) amt.textContent = t.actitudModalTitle;
+  const amh = document.querySelector('.actitud-modal-head'); if (amh) amh.textContent = t.actitudModalHead;
+  const ams = document.querySelector('.actitud-modal-sub'); if (ams) ams.textContent = t.actitudModalSub;
+
+  // ── Projects page ──────────────────────────────────────────
+  const pt = document.querySelector('.projects-page-title'); if (pt) pt.textContent = t.todasMisiones;
+  const bb = document.querySelector('.back-btn'); if (bb) bb.textContent = t.volverInicio;
+
+  // ── Family section placeholder ─────────────────────────────
+  const fvt = document.querySelector('.family-empty-title'); if (fvt) fvt.textContent = t.miGalaxia.includes('Family') ? 'Family View' : t.famEspacio;
+  const fvs = document.querySelector('.family-empty-sub'); if (fvs) fvs.textContent = t.proximamente;
+
+  // ── Switcher ───────────────────────────────────────────────
+  document.querySelectorAll('[data-i18n="alumno"]').forEach(el => el.textContent = t.alumno);
+  document.querySelectorAll('[data-i18n="familia"]').forEach(el => el.textContent = t.familia);
+
+  // ── Re-render JS-driven portal sections ───────────────────
+  renderMissions();
+  renderArchive();
+  if (typeof renderProjects === 'function') renderProjects();
+  renderActitudPreview();
+
+  // ── Apply family i18n ──────────────────────────────────────
+  applyFamilyI18n(t, firstName, name);
+}
+
+function renderActitudPreview() {
+  const t = getLangData();
+  const grid = document.getElementById('actitud-list');
+  if (!grid) return;
+  grid.innerHTML = t.allActitudes.slice(0, 4).map(a => actitudCardHTML(Object.assign({}, a, {
+    icon: a.pos
+      ? `<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><path d="M18 32 L26 40 L42 22" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`
+      : `<div class="actitud-icon" style="background:#fee2e2"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fecaca"/><path d="M30 16 L44 40 L16 40Z" stroke="#dc2626" stroke-width="3" stroke-linejoin="round" fill="none"/><path d="M30 25 L30 33 M30 36 L30 37" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/></svg></div>`
+  }))).join('');
+}
+
+function applyFamilyI18n(t, firstName, fullName) {
+  const sv = sel => document.querySelector(sel);
+  const svSet = (sel, txt) => { const el = sv(sel); if (el) el.textContent = txt; };
+  const svSetHtml = (sel, html) => { const el = sv(sel); if (el) el.innerHTML = html; };
+  const svBtnText = (sel, txt) => {
+    const el = sv(sel); if (!el) return;
+    const svg = el.querySelector('svg'); el.textContent = txt; if (svg) el.appendChild(svg);
+  };
+  const svEyebrow = (sel, txt) => {
+    const el = sv(sel); if (!el) return;
+    const svg = el.querySelector('svg'); el.textContent = txt; if (svg) el.insertBefore(svg, el.firstChild);
+  };
+
+  // Hero eyebrow
+  svEyebrow('.f-hero-id .f-eyebrow', t.famEspacio);
+  // Hero where
+  svSetHtml('.f-hero-where', t.famSchool + '<span class="f-dot">·</span>Makers 5A<span class="f-dot">·</span>' + (t === I18N.ENG ? 'Advanced Robotics' : t === I18N.CAT ? 'Robòtica Avançada' : 'Robótica Avanzada'));
+  // Hero H1
+  const h1 = sv('.fam-root .sc-hero .f-display');
+  if (h1) h1.innerHTML = t.famHero1 + (t.famHeroVerb ? ' ' + t.famHeroVerb : '') + '<br><em style="font-style:italic;color:var(--f-cta)">' + t.famHero2 + '</em>';
+  // Hero lede
+  const hl = sv('.fam-root .sc-hero .f-lede');
+  if (hl) hl.innerHTML = t.famHeroLede(firstName);
+  // Scroll cue
+  const sc = sv('.f-scroll-cue');
+  if (sc) { const svg = sc.querySelector('svg'); sc.textContent = t.famScrollCue + ' '; if (svg) sc.appendChild(svg); }
+  // Seal
+  document.querySelectorAll('textPath').forEach(tp => {
+    if (tp.textContent.includes('UNIVERSO') || tp.textContent.includes('UNIVERSE') || tp.textContent.includes('UNIVERS')) {
+      tp.textContent = t.famSealText(firstName);
+    }
+  });
+
+  // Section 01
+  svEyebrow('.f-scene.sc-yellow .f-eyebrow', t.famSec01Eyebrow);
+  const s01 = sv('.f-scene.sc-yellow .f-display');
+  if (s01) s01.innerHTML = t.famSec01T1 + '<br><em style="font-style:italic;color:var(--f-cta)">' + t.famSec01T2 + '</em>';
+  svSet('.f-scene.sc-yellow .f-lede', t.famSec01Lede);
+
+  // Section 02
+  svEyebrow('.f-scene.sc-blue .f-eyebrow', t.famSec02Eyebrow);
+  const s02 = sv('.f-scene.sc-blue .f-display');
+  if (s02) s02.innerHTML = t.famSec02T1 + '<br>' + t.famSec02T3 + ' <em style="font-style:italic;color:var(--f-cta)">' + t.famSec02T2 + '</em>';
+  svSet('.f-scene.sc-blue .f-lede', t.famSec02Lede);
+
+  // Section 03
+  svEyebrow('#fam-collection .f-eyebrow', t.famSec03Eyebrow);
+  const s03 = sv('#fam-collection .f-display');
+  if (s03) s03.innerHTML = t.famSec03T1 + ' <em style="font-style:italic;color:var(--f-cta)">' + t.famSec03T2 + '</em>';
+  svSet('#fam-collection .f-lede', t.famSec03Lede);
+  const hh = sv('.f-horiz-hint');
+  if (hh) { const svg = hh.querySelector('svg'); hh.textContent = t.famHorizHint + ' '; if (svg) hh.appendChild(svg); }
+
+  // Section 04
+  svEyebrow('.f-scene.sc-yellow-2 .f-eyebrow', t.famSec04Eyebrow);
+  const s04 = sv('.f-scene.sc-yellow-2 .f-display');
+  if (s04) s04.innerHTML = t.famSec04T1 + ' <em style="font-style:italic;color:var(--f-cta)">' + t.famSec04T2 + '</em>';
+  svSet('.f-scene.sc-yellow-2 .f-lede', t.famSec04Lede);
+  const flbl = document.getElementById('famLogBtnLabelEl');
+  if (flbl) flbl.textContent = t.famVerMomentos;
+
+  // Closing
+  const cq = sv('.f-close-quote');
+  if (cq) cq.innerHTML = t.famClose1(firstName) + ' <em>' + t.famCloseEm + '</em> ' + t.famClose2;
+  svSet('.f-close-sign', t.famCloseSign);
+  svSet('.f-close-sub', t.famCloseSub);
+  const fn = sv('.f-foot-note');
+  if (fn) fn.innerHTML = '<b>Ignite</b> ' + t.famFooter(fullName);
+
+  // All-projects overlay
+  svSet('.f-allproj .f-allproj-head', t.famAllTitle);
+  const apSub = sv('.f-allproj .f-allproj-sub');
+  if (apSub) apSub.textContent = t.famAllSub(firstName);
+  const apTitle = sv('.f-allproj .f-ap-title');
+  if (apTitle) apTitle.textContent = t.famAllOverlayTitle;
+  const apBack = sv('.f-allproj .f-ap-back');
+  if (apBack) { const svg = apBack.querySelector('svg'); apBack.textContent = t.volver; if (svg) apBack.insertBefore(svg, apBack.firstChild); }
+
+  // Moments modal
+  svSet('.f-moments-modal .f-allproj-head', t.famMomTitle);
+  svSet('.f-moments-modal .f-allproj-sub', t.famMomSub);
+  const mmTitle = sv('.f-moments-modal .f-ap-title');
+  if (mmTitle) mmTitle.textContent = t.famMomOverlayTitle;
+  const mmBack = sv('.f-moments-modal .f-ap-back');
+  if (mmBack) { const svg = mmBack.querySelector('svg'); mmBack.textContent = t.volver; if (svg) mmBack.insertBefore(svg, mmBack.firstChild); }
+
+  // Active project cards (re-render via family IIFE data)
+  if (window._famRender) window._famRender(t);
+
+  // Territory rows — progress label
+  document.querySelectorAll('.f-terr-word').forEach(el => el.textContent = t.famProgreso);
+  document.querySelectorAll('.f-terr-count').forEach(el => {
+    const n = el.textContent.match(/\d+/); if (n) el.textContent = n[0] + ' ' + t.famHabilidades;
+  });
+
+  // Horizontal scroll CTA button
+  svBtnText('.f-hcard-cta .f-editorial-btn', t.famVerTodos);
+
+  // Skill labels in horizontal cards
+  document.querySelectorAll('.f-hcard .f-skl-label').forEach(el => el.textContent = t.famLoQueAprendio);
+  document.querySelectorAll('.f-proj-body .f-skl-label').forEach(el => el.textContent = t.famLoQuePractica);
+
+  // "Ver lo que aprendió" disclosure buttons
+  document.querySelectorAll('.f-disclosure').forEach(btn => {
+    const svg = btn.querySelector('svg'); btn.textContent = t.famVerLoQueAprendio; if (svg) btn.appendChild(svg);
+  });
+
+  // "En curso" kickers
+  document.querySelectorAll('.f-proj-kicker').forEach(el => {
+    const svg = el.querySelector('svg'); const cat = el.textContent.split('·').pop()?.trim() || '';
+    el.innerHTML = ''; if (svg) el.appendChild(svg.cloneNode(true));
+    el.appendChild(document.createTextNode(t.famEnCurso + ' · ' + cat));
   });
 }
+
+// ── setLang — main entry point ─────────────────────────────────
+function setLang(code) {
+  if (!I18N[code]) return;
+  _currentLang = code;
+  window._currentLang = code;
+  ['ESP','ENG','CAT'].forEach(l => {
+    document.getElementById('lang-'+l)?.classList.toggle('active', l===code);
+    document.getElementById('modal-lang-'+l)?.classList.toggle('active', l===code);
+  });
+  // Refresh all data arrays to current language
+  archiveMissions = getLangData().archiveMissions;
+  activeMissions  = getLangData().activeMissions;
+  allActitudes    = getLangData().allActitudes;
+  allProjects     = getLangData().allProjects;
+  frases          = getLangData().frases;
+  FAM_MOMENTS     = getLangData().famMoments;
+  // Keep selected frase by id if possible, else use first
+  selectedFrase = frases.find(f => selectedFrase && f.id === selectedFrase.id) || frases[0];
+  patchRamasTitles();
+  patchSkillDescs();
+  applyI18n(code);
+}
+
 function handleLangBtn(code) {
   if (document.getElementById('topbar-wrapper').classList.contains('collapsed')) {
     document.getElementById('lang-modal').classList.add('open');
@@ -3267,6 +4020,8 @@ function handleLangBtn(code) {
   }
 }
 function closeLangModal() { document.getElementById('lang-modal').classList.remove('open'); }
+// Arrays filled in DOMContentLoaded below — see bottom of script
+
 
 // ── PALETTE ───────────────────────────────────────────────────
 const PALETTE_LOCKED = { crepusculo: 8, neon: 9, cosmos: 10 };
@@ -3346,33 +4101,6 @@ function spawnParticles(anchor) {
 
 // ── ACTITUD ───────────────────────────────────────────────────
 // ── ALL ACTITUDES DATA ─────────────────────────────────────────
-const allActitudes = [
-  { pos:true,  name:'Ayudó a un compañero',        date:'14 may 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><path d="M18 32 L26 40 L42 22" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`, xp:'+20 XP' },
-  { pos:true,  name:'Participación excepcional',    date:'12 may 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><path d="M30 14 L33.5 23 L44 23 L36 29 L39 38 L30 32 L21 38 L24 29 L16 23 L26.5 23Z" fill="#16a34a"/></svg></div>`, xp:'+30 XP' },
-  { pos:false, name:'Llegó tarde a clase',          date:'8 may 2025',
-    icon:`<div class="actitud-icon" style="background:#fee2e2"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fecaca"/><path d="M30 16 L44 40 L16 40Z" stroke="#dc2626" stroke-width="3" stroke-linejoin="round" fill="none"/><path d="M30 25 L30 33 M30 36 L30 37" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/></svg></div>`, xp:'-10 XP' },
-  { pos:true,  name:'Idea creativa destacada',      date:'5 may 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><circle cx="30" cy="26" r="8" stroke="#16a34a" stroke-width="2.5" fill="none"/><path d="M30 34V40M26 40H34" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/></svg></div>`, xp:'+25 XP' },
-  { pos:true,  name:'Liderazgo en grupo',           date:'2 may 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><circle cx="22" cy="26" r="7" stroke="#16a34a" stroke-width="2.5" fill="none"/><circle cx="38" cy="26" r="7" stroke="#16a34a" stroke-width="2.5" fill="none"/><path d="M16 44 L16 40 Q16 34 22 34 H38 Q44 34 44 40 L44 44" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></div>`, xp:'+20 XP' },
-  { pos:false, name:'No entregó tarea a tiempo',    date:'28 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#fee2e2"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fecaca"/><circle cx="30" cy="24" r="9" stroke="#dc2626" stroke-width="2.5" fill="none"/><path d="M30 18 L30 24 L36 24" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`, xp:'-15 XP' },
-  { pos:true,  name:'Mejor proyecto de la semana',  date:'25 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><path d="M22 14 L22 30 Q22 38 30 38 Q38 38 38 30 L38 14Z" stroke="#16a34a" stroke-width="2.5" stroke-linejoin="round" fill="none"/><path d="M24 42 L36 42 M30 38 L30 42" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/></svg></div>`, xp:'+50 XP' },
-  { pos:true,  name:'Documentó su proyecto',        date:'22 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><rect x="18" y="14" width="24" height="30" rx="4" stroke="#16a34a" stroke-width="2.5" fill="none"/><path d="M22 22 L38 22 M22 28 L38 28 M22 34 L32 34" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/></svg></div>`, xp:'+15 XP' },
-  { pos:true,  name:'Presentó su trabajo al grupo', date:'18 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><rect x="14" y="18" width="32" height="20" rx="4" stroke="#16a34a" stroke-width="2.5" fill="none"/><path d="M30 38 L30 44 M24 44 L36 44" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/></svg></div>`, xp:'+20 XP' },
-  { pos:false, name:'Interrumpió la clase',         date:'14 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#fee2e2"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fecaca"/><path d="M20 20 L40 40 M40 20 L20 40" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/></svg></div>`, xp:'-10 XP' },
-  { pos:true,  name:'Resolvió un reto en equipo',   date:'10 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><path d="M18 32 L26 40 L42 22" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`, xp:'+25 XP' },
-  { pos:true,  name:'Ayudó a organizar el espacio', date:'5 abr 2025',
-    icon:`<div class="actitud-icon" style="background:#dcfce7"><svg width="44" height="44" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#bbf7d0"/><rect x="16" y="22" width="12" height="16" rx="2" stroke="#16a34a" stroke-width="2.5" fill="none"/><rect x="32" y="16" width="12" height="22" rx="2" stroke="#16a34a" stroke-width="2.5" fill="none"/></svg></div>`, xp:'+15 XP' },
-];
-
 function actitudCardHTML(a) {
   return `<div class="actitud-card">
     ${a.icon}
@@ -3422,25 +4150,10 @@ function closeActitudModal() {
 }
 
 // ── PROJECTS PAGE ─────────────────────────────────────────────
-const allProjects=[
-  {name:'Robot Explorador',dates:'En curso',cat:'Robótica',skills:[{n:'Programación Arduino',x:0},{n:'Sensores',x:0},{n:'Diseño mecánico',x:0}],xp:'En curso'},
-  {name:'Estación Meteorológica',dates:'15 ene – 12 feb 2025',cat:'Electrónica',skills:[{n:'Sensores & Arduino',x:120},{n:'Análisis de datos',x:100},{n:'Trabajo en equipo',x:100}],xp:320},
-  {name:'Videojuego en Scratch',dates:'3 nov – 28 nov 2024',cat:'Programación',skills:[{n:'Lógica de programación',x:130},{n:'Diseño de personajes',x:80},{n:'Creatividad narrativa',x:70}],xp:280},
-  {name:'Puente de Espaguetis',dates:'5 oct – 25 oct 2024',cat:'Ingeniería',skills:[{n:'Resistencia de materiales',x:90},{n:'Trabajo cooperativo',x:70},{n:'Prototipado',x:40}],xp:200},
-  {name:'App de Reciclaje',dates:'10 sep – 2 oct 2024',cat:'Programación',skills:[{n:'Diseño de apps',x:110},{n:'Sostenibilidad',x:80},{n:'UX Design',x:60}],xp:250},
-  {name:'Planetario Virtual',dates:'5 jun – 28 jun 2024',cat:'Ciencia',skills:[{n:'Astronomía',x:100},{n:'Presentación oral',x:80},{n:'Investigación',x:70}],xp:250},
-  {name:'Cañón de Aire',dates:'3 may – 24 may 2024',cat:'Física',skills:[{n:'Aerodinámica',x:90},{n:'Matemáticas',x:80},{n:'Experimentación',x:60}],xp:230},
-  {name:'Llavero 3D',dates:'1 abr – 19 abr 2024',cat:'Diseño 3D',skills:[{n:'Modelado 3D',x:120},{n:'Impresión 3D',x:80},{n:'Creatividad',x:50}],xp:250},
-  {name:'Casa Domótica',dates:'5 mar – 28 mar 2024',cat:'IoT',skills:[{n:'Electrónica',x:110},{n:'Automatización',x:90},{n:'Programación',x:80}],xp:280},
-  {name:'Generador Musical IA',dates:'2 feb – 22 feb 2024',cat:'IA',skills:[{n:'Machine Learning',x:130},{n:'Música',x:100},{n:'Python',x:90}],xp:320},
-  {name:'Monitor de Agua',dates:'10 ene – 30 ene 2024',cat:'Ciencia',skills:[{n:'Química',x:80},{n:'Sensores',x:90},{n:'Datos',x:70}],xp:240},
-  {name:'Coche Autónomo',dates:'5 dic – 20 dic 2023',cat:'Robótica',skills:[{n:'Control PID',x:120},{n:'Visión artificial',x:100},{n:'Electrónica',x:80}],xp:300},
-  {name:'Brazo Robótico',dates:'1 nov – 25 nov 2023',cat:'Robótica',skills:[{n:'Servomotores',x:110},{n:'Programación',x:100},{n:'Diseño',x:70}],xp:280},
-  {name:'Radio AM Casera',dates:'5 oct – 28 oct 2023',cat:'Electrónica',skills:[{n:'Ondas',x:90},{n:'Circuitos',x:100},{n:'Soldadura',x:60}],xp:250},
-];
 const PAGE_SIZE=12; let cp=0;
-const tp=Math.ceil(allProjects.length/PAGE_SIZE);
+let tp=0; // recalculated after init
 function renderProjects(){
+  tp = Math.ceil(allProjects.length / PAGE_SIZE);
   const g = document.getElementById('projects-grid');
   if (!g) return;
   const s = allProjects.slice(cp*PAGE_SIZE, (cp+1)*PAGE_SIZE);
@@ -3459,8 +4172,8 @@ function renderProjects(){
   document.getElementById('prev-page').disabled = cp === 0;
   document.getElementById('next-page').disabled = cp >= tp-1;
 }
-function changePage(d){cp=Math.max(0,Math.min(tp-1,cp+d));renderProjects();window.scrollTo(0,0);}
-renderProjects();
+function changePage(d){tp=Math.ceil(allProjects.length/PAGE_SIZE);cp=Math.max(0,Math.min(tp-1,cp+d));renderProjects();window.scrollTo(0,0);}
+// renderProjects() called after DOMContentLoaded
 
 // ── TOUCH HANDLERS (long press = animation, tap = modal) ──────
 let mascotTouchTimer = null;
@@ -4570,28 +5283,7 @@ function renderMascotMain() {
 }
 
 // Phrases — unlocked by level, philosophy/purpose vibes
-const frases = [
-  { id:'ignite',    text:"¡Let's Ignite!",          minLevel:1,  icon:'⚡' },
-  { id:'aprendo',   text:'Aprendo un poco más cada día', minLevel:1, icon:'📚' },
-  { id:'error',     text:'Los errores me hacen crecer',  minLevel:1, icon:'🌱' },
-  { id:'crear',     text:'Crear es mi superpoder',       minLevel:2, icon:'✨' },
-  { id:'curioso',   text:'La curiosidad no tiene límites', minLevel:2, icon:'🔭' },
-  { id:'equipo',    text:'Juntos llegamos más lejos',    minLevel:3, icon:'🤝' },
-  { id:'pregunta',  text:'Cada pregunta abre una puerta',minLevel:3, icon:'🚪' },
-  { id:'reto',      text:'Los retos son oportunidades',  minLevel:4, icon:'🏆' },
-  { id:'codigo',    text:'El código es mi idioma',       minLevel:4, icon:'💻' },
-  { id:'persiste',  text:'Persistir es la clave',        minLevel:5, icon:'🔑' },
-  { id:'imagine',   text:'Imagina, diseña, construye',   minLevel:5, icon:'🛠️' },
-  { id:'impacto',   text:'Quiero cambiar el mundo',      minLevel:6, icon:'🌍' },
-  { id:'robot',     text:'Dominaré la robótica',         minLevel:6, icon:'🤖' },
-  { id:'datos',     text:'Los datos cuentan historias',  minLevel:7, icon:'📊' },
-  { id:'conecto',   text:'Conecto ideas para innovar',   minLevel:7, icon:'💡' },
-  { id:'heroe',     text:'Soy héroe de mi aprendizaje',  minLevel:8, icon:'⚔️' },
-  { id:'future',    text:'El futuro lo construyo hoy',   minLevel:9, icon:'🚀' },
-  { id:'legend',    text:'Seré una leyenda del código',  minLevel:10,icon:'🌟' },
-];
-
-let selectedFrase = frases[0];
+let selectedFrase = null; // set after DOMContentLoaded
 
 function switchMascotTab(tab) {
   ['shape','color','acc'].forEach(t => {
@@ -4883,6 +5575,23 @@ function gxCloseFullscreen(){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&_gxFsMode)gxCloseFullscreen();if(e.key==='Escape'){const am=document.getElementById('actitud-modal');if(am&&am.classList.contains('open'))closeActitudModal();}});
 // Faithful port of portal-progreso.html — three sub-modules wrapped in IgniteProgress API
+// ── Global i18n patch helpers (must be global, called from setLang) ──
+function patchSkillDescs() {
+  var t = getLangData();
+  if (!t.skillDescs || typeof RAMAS === 'undefined') return;
+  Object.values(RAMAS).forEach(function(rama) {
+    (rama.skills || []).forEach(function(sk) {
+      if (t.skillDescs[sk.n]) sk.desc = t.skillDescs[sk.n];
+    });
+  });
+}
+function patchRamasTitles() {
+  var t = getLangData();
+  if (t.ramasTitles && typeof RAMAS !== 'undefined') {
+    Object.keys(t.ramasTitles).forEach(function(r) { if (RAMAS[r]) RAMAS[r].title = t.ramasTitles[r]; });
+  }
+}
+
 window.IgniteProgress = (function(){
 'use strict';
 
@@ -4949,6 +5658,8 @@ let RAMAS={
     {n:'Gestión del tiempo',lv:3,xp:60,desc:'Organiza tus tareas y cumple los plazos.'},
     {n:'Creatividad',lv:3,xp:40,desc:'Encuentra ideas nuevas y originales.'}]},
 };
+// patchSkillDescs and patchRamasTitles moved to global scope
+
 const PROG={Science:72,Technology:89,Engineering:61,Art:55,Maths:38,Transversals:78};
 const LV={Science:4,Technology:6,Engineering:5,Art:4,Maths:3,Transversals:5};
 
@@ -5810,7 +6521,18 @@ return{render,showView,openPov,closePov,goToPov,navPov,launch:launchDespegues,se
   if(typeof _origSP==='function'){
     window.setPalette=function(name){
       _origSP(name);
-      setTimeout(()=>window.IgniteProgress&&window.IgniteProgress.render(),60);
+      archiveMissions=getLangData().archiveMissions;
+      activeMissions=getLangData().activeMissions;
+      allActitudes=getLangData().allActitudes;
+      allProjects=getLangData().allProjects;
+      frases=getLangData().frases;
+      FAM_MOMENTS=getLangData().famMoments;
+      selectedFrase = frases.find(f => selectedFrase && f.id === selectedFrase.id) || frases[0];
+      patchRamasTitles(); patchSkillDescs();
+      setTimeout(()=>{
+        if(window.IgniteProgress) window.IgniteProgress.render();
+        setTimeout(()=>{ applyI18n(_currentLang); }, 80);
+      },60);
     };
   }
 })();
@@ -5882,17 +6604,6 @@ function getFamAreas(){
     {name:'Habilidades personales',kind:'Transversal',letter:'+',ac:'#6E63E8',desc:'Trabajar, comunicar, liderar.',skills:[{n:'Trabajo en equipo',p:'domina',d:'Colaboración.',lv:3},{n:'Comunicación',p:'progreso',d:'Expresa ideas.',lv:2},{n:'Liderazgo',p:'progreso',d:'Guía al grupo.',lv:2}]}
   ];
 }
-var FAM_MOMENTS=[
-  {date:'14 may 2025',type:'good',cat:'Compañerismo',name:'Ayudó a un compañero',text:'Echó una mano a un compañero que se había atascado.'},
-  {date:'12 may 2025',type:'good',cat:'Participación',name:'Participación excepcional',text:'Participó con muchas ganas y aportó ideas al equipo.'},
-  {date:'8 may 2025',type:'note',cat:'Puntualidad',name:'Llegó un poco tarde',text:'Esta vez llegó algo tarde. Un pequeño recordatorio.'},
-  {date:'5 may 2025',type:'good',cat:'Creatividad',name:'Idea creativa destacada',text:'Sorprendió con una idea original para resolver el reto.'},
-  {date:'2 may 2025',type:'good',cat:'Liderazgo',name:'Liderazgo en el grupo',text:'Tomó la iniciativa y organizó a su grupo.'},
-  {date:'28 abr 2025',type:'note',cat:'Tareas',name:'Una tarea sin terminar',text:'No llegó a terminar la tarea. Lo retomará con tranquilidad.'},
-  {date:'25 abr 2025',type:'good',cat:'Proyecto',name:'Mejor proyecto de la semana',text:'Su proyecto fue elegido el mejor de la semana.'},
-  {date:'22 abr 2025',type:'good',cat:'Constancia',name:'Documentó su proyecto',text:'Dedicó tiempo a documentar su proyecto con detalle.'}
-];
-
 /* ── Helpers ── */
 var ART={
   robot:'<svg class="f-proj-art" viewBox="0 0 120 120" fill="none"><g stroke="#2F3A4A" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M60 30 V20"/><circle cx="60" cy="15.5" r="3.2" fill="#FBB03B" stroke="none"/><rect x="36" y="30" width="48" height="34" rx="12"/><circle cx="50" cy="47" r="3"/><circle cx="70" cy="47" r="3"/><path d="M52 56 q8 4.5 16 0"/><path d="M30 44 v9M90 44 v9"/><rect x="45" y="68" width="30" height="29" rx="10"/><path d="M45 80 H33M75 80 H87"/><path d="M53 97 v8M67 97 v8"/><circle cx="53" cy="109" r="3.6"/><circle cx="67" cy="109" r="3.6"/></g></svg>',
@@ -6164,6 +6875,7 @@ window.famCloseAll=function(){var p=document.getElementById('famAllProjects');if
 /* ── Init ── */
 function init(){
   if(_inited)return; _inited=true;
+  FAM_MOMENTS=getLangData().famMoments;
   renderFamNow();
   renderFamAreas();
   renderFamHoriz();
@@ -6220,6 +6932,32 @@ if(document.readyState==='loading'){
 }
 
 })(); /* end family IIFE */
+
+/* ═══════════════════════════════════════════════════════════════
+   SINGLE BOOT — runs after ALL functions and I18N are defined
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function bootPortal() {
+  // 1. Fill data arrays from default language (ESP)
+  archiveMissions = getLangData().archiveMissions;
+  activeMissions  = getLangData().activeMissions;
+  allActitudes    = getLangData().allActitudes;
+  allProjects     = getLangData().allProjects;
+  frases          = getLangData().frases;
+  selectedFrase   = frases[0] || { text: "¡Let's Ignite!", id: 'ignite' };
+
+  // 2. tp for projects pagination
+  tp = Math.ceil(allProjects.length / PAGE_SIZE);
+
+  // 3. Initial renders
+  renderMissions();
+  renderArchive();
+  renderProjects();
+  renderActitudPreview();
+
+  // 4. Patch RAMAS titles/descs to current language
+  patchRamasTitles();
+  patchSkillDescs();
+});
 </script>
 
 
