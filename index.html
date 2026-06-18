@@ -1763,8 +1763,8 @@ var LVL_PAL  = ['','amarillo','amarillo','caramelo','caramelo','bosque','bosque'
 
 // ─── STATE ──────────────────────────────────────────────────────
 var S = { nombre:'', apellido:'', cur:0, ans:[], sel:null };
-var history = [];
-try { history = JSON.parse(localStorage.getItem('igndemo') || '[]'); } catch(e){}
+var demoLog = [];
+try { demoLog = JSON.parse(localStorage.getItem('igndemo') || '[]'); } catch(e){}
 
 // ─── HELPERS ────────────────────────────────────────────────────
 function show(id){ document.querySelectorAll('.sc').forEach(function(el){el.classList.remove('on');}); document.getElementById(id).classList.add('on'); }
@@ -1899,8 +1899,8 @@ function showResult() {
     total: total,
     respuestas: S.ans.map(function(a,i){return 'Q'+(i+1)+':'+letters[a.chosen]+(a.correct?'✓':'✗');}).join(' | ')
   };
-  history.unshift(entry);
-  try { localStorage.setItem('igndemo', JSON.stringify(history.slice(0,200))); } catch(e){}
+  demoLog.unshift(entry);
+  try { localStorage.setItem('igndemo', JSON.stringify(demoLog.slice(0,200))); } catch(e){}
 
   // Send to Sheets
   // Send to Google Forms (zero CORS, always works)
@@ -1982,11 +1982,11 @@ function retryTest() {
 // ─── ADMIN PANEL ────────────────────────────────────────────────
 function openAdmin() {
   var body = qs('adm-body');
-  if (!history.length) {
+  if (!demoLog.length) {
     body.innerHTML = '<div class="aempty">No hay respuestas todavía.</div>';
   } else {
     var letters = ['A','B','C','D'];
-    body.innerHTML = history.map(function(e) {
+    body.innerHTML = demoLog.map(function(e) {
       var ansParts = e.respuestas.split(' | ');
       var ansHtml = ansParts.map(function(a,i){
         var ok = a.indexOf('✓') >= 0;
@@ -2002,7 +2002,7 @@ function openAdmin() {
 function closeAdmin() { qs('ADM').classList.remove('on'); }
 function exportCSV() {
   var rows = [['Timestamp','Nombre','Nivel','Correctas','Total','Respuestas']];
-  history.forEach(function(e){ rows.push([e.timestamp,e.nombre,e.nivel,e.correctas,e.total,'"'+e.respuestas+'"']); });
+  demoLog.forEach(function(e){ rows.push([e.timestamp,e.nombre,e.nivel,e.correctas,e.total,'"'+e.respuestas+'"']); });
   var csv = rows.map(function(r){return r.join(',');}).join('\n');
   var a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
